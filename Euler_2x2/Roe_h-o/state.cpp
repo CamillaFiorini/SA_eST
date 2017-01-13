@@ -24,8 +24,6 @@ void state::get_U(vector<double>& a, int i)
 	
 	return;
 };
-
-
 void state::get_tau(vector<double>& a)
 {
 	a = U[0];
@@ -79,26 +77,7 @@ double state::psi(double r)
 };
 
 
-// compute lambda_L
-void state::compute_lambdaL(vector<double>& l)
-{
-	int N = U[0].size();
-	l.resize(N+1);
-	for (int i = 0; i <= N; ++i)
-	{
-		int left = max(0,i-1);
-		int right = min(i, N-1);
-		double tauL = U[0][left];
-		double tauR = U[0][right];
-		if(fabs(tauL-tauR) < 1e-15)
-			l[i] = - sqrt( gamma*pow(tauL, -gamma-1) );
-		else
-			l[i] = - sqrt( -(pow(tauL, -gamma) - pow(tauR, -gamma)) / (tauL-tauR) );
-	}
-	
-	return;
-};
-
+// compute lambda_R
 void state::compute_lambdaR(vector<double>& l)
 {
 	int N = U[0].size();
@@ -106,9 +85,42 @@ void state::compute_lambdaR(vector<double>& l)
 	for (int i = 0; i <= N; ++i)
 	{
 		int left = max(0,i-1);
+		int Lleft = max(i-2,0);
 		int right = min(i, N-1);
-		double tauL = U[0][left];
-		double tauR = U[0][right];
+		int Rright = min(i+1, N-1);
+		double tau_L = U[0][left];
+		double tau_R = U[0][right];
+		double tau_LL = U[0][Lleft];
+		double tau_RR = U[0][Rright];
+		double kappa = 1./3.;
+		double irR, rR, irL, rL;
+		//vector<int> d1, d2;
+		
+		if (fabs(tau_RR-tau_R) < 1e-15 || fabs((tau_R-tau_L)) < 1e-15 /*|| d1[left] == 1 || d2[right] == 1*/)
+		{
+			irR = 0;
+			rR = 0;
+		}
+		else
+		{
+			rR = (tau_R-tau_L)/(tau_RR-tau_R);
+			irR = 1./rR;
+		}
+		
+		if (fabs(tau_L-tau_LL) < 1e-15 || fabs(tau_R-tau_L) < 1e-15 /*|| d1[left] == 1 || d2[right] == 1*/)
+		{
+			rL = 0;
+			irL = 0;
+		}
+		else
+		{
+			rL = (tau_R-tau_L)/(tau_L-tau_LL);
+			irL = 1./rL;
+		}
+		
+		double tauL = tau_L +1.*( this->psi(rL)*(1-kappa)/4*(tau_L - tau_LL) + this->psi(irL)*(1+kappa)/4*(tau_R - tau_L));
+		double tauR = tau_R +1.*(- this->psi(irR)*(1+kappa)/4*(tau_R - tau_L) - this->psi(rR)*(1-kappa)/4*(tau_RR - tau_R));
+		
 		if(fabs(tauL-tauR) < 1e-15)
 			l[i] = sqrt( gamma*pow(tauL, -gamma-1) );
 		else
@@ -118,30 +130,6 @@ void state::compute_lambdaR(vector<double>& l)
 };
 
 // compute d(lambda)/dp
-void state::compute_s_lambdaL(vector<double>& sl)
-{
-	vector<double> l;
-	this->compute_lambdaL(l);
-	
-	int N = U[0].size();
-	sl.resize(N+1);
-	for (int i = 0; i <= N; ++i)
-	{
-		int left = max(0,i-1);
-		int right = min(i, N-1);
-		double tauL = U[0][left];
-		double tauR = U[0][right];
-		double s_tauL = U[2][left];
-		double s_tauR = U[2][right];
-		if(fabs(tauL-tauR) < 1e-15)
-			sl[i] = -gamma*(gamma+1)*pow(tauL, -gamma-2)*(s_tauR+s_tauL)/(4*l[i]);
-		else
-			sl[i] = - (-gamma*s_tauL*pow(tauL, -gamma-1) + gamma*s_tauR*pow(tauR, -gamma-1))/(2*l[i]*(tauL-tauR)) - l[i]*(s_tauL-s_tauR)/(2*(tauL-tauR));
-	}
-	
-	return;
-};
-
 void state::compute_s_lambdaR(vector<double>& sl)
 {
 	vector<double> l;

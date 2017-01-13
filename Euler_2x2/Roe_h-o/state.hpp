@@ -33,10 +33,11 @@ public:
 	
 	double psi(double);
 	
-	void compute_lambdaL(vector<double>&);
 	void compute_lambdaR(vector<double>&);
-	void compute_s_lambdaL(vector<double>&);
 	void compute_s_lambdaR(vector<double>&);
+	
+//	void detector_s1(vector<int>&, double=0.0);
+//	void detector_s2(vector<int>&, double=0.0);
 };
 
 #endif
