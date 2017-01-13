@@ -1,0 +1,23 @@
+CXX = g++
+CXXFLAGS = 
+
+main: main.cpp mesh.o state.o flux.o
+	$(CXX) $(CXXFLAGS) -o main main.cpp mesh.o state.o flux.o
+
+mesh.o: mesh.hpp mesh.cpp
+	$(CXX) $(CXXFLAGS) -c mesh.cpp
+
+state.o: state.hpp state.cpp
+	$(CXX) $(CXXFLAGS) -c state.cpp
+
+flux.o: flux.hpp flux.cpp state.o
+	$(CXX) $(CXXFLAGS) -c flux.cpp
+
+clean:
+	$(RM) *.o
+
+distclean:
+	$(MAKE) clean
+	$(RM) main
+
+.PHONY: clean distclean
