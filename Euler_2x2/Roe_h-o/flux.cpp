@@ -39,39 +39,11 @@ void flux::residual(state st, vector<vector<double> >& R, vector<vector<double> 
 		st.get_U(U_RR, Rright);
 		double kappa = 1./3.;
 
-		
 		vector<double> rR(4), rL(4), irR(4), irL(4);
-	/*	for (int k = 0; k < 2; ++k)
-		{
-			if (fabs(U_RR[k]-U_R[k]) < 1e-15 || fabs((U_R[k]-U_L[k])) < 1e-15)
-			{
-				irR[k] = 0;
-				rR[k] = 0;
-			}
-			else
-			{
-				rR[k] = (U_R[k]-U_L[k])/(U_RR[k]-U_R[k]);
-				irR[k] = 1./rR[k];
-			}
-				
-			if (fabs(U_L[k]-U_LL[k]) < 1e-15 || fabs(U_R[k]-U_L[k]) < 1e-15)
-			{
-				rL[k] = 0;
-				irL[k] = 0;
-			}
-			else
-			{
-				rL[k] = (U_R[k]-U_L[k])/(U_L[k]-U_LL[k]);
-				irL[k] = 1./rL[k];
-			}
-			UL[k] = U_L[k] +1.*( st.psi(rL[k])*(1-kappa)/4*(U_L[k] - U_LL[k]) + st.psi(irL[k])*(1+kappa)/4*(U_R[k] - U_L[k]));
-			UR[k] = U_R[k] +1.*(- st.psi(irR[k])*(1+kappa)/4*(U_R[k] - U_L[k]) - st.psi(rR[k])*(1-kappa)/4*(U_RR[k] - U_R[k]));
-			
-		}*/
 		
 		for (int k = 0; k < 4; ++k)
 		{
-			if (fabs(U_RR[k]-U_R[k]) < 1e-15 || fabs((U_R[k]-U_L[k])) < 1e-15 || d1[left] == 1 || d2[right] == 1)
+			if (fabs(U_RR[k]-U_R[k]) < 1e-15 || fabs((U_R[k]-U_L[k])) < 1e-15 /*|| d1[left] == 1 || d2[right] == 1*/)
 			{
 				irR[k] = 0;
 				rR[k] = 0;
@@ -82,7 +54,7 @@ void flux::residual(state st, vector<vector<double> >& R, vector<vector<double> 
 				irR[k] = 1./rR[k];
 			}
 			
-			if (fabs(U_L[k]-U_LL[k]) < 1e-15 || fabs(U_R[k]-U_L[k]) < 1e-15 || d1[left] == 1 || d2[right] == 1)
+			if (fabs(U_L[k]-U_LL[k]) < 1e-15 || fabs(U_R[k]-U_L[k]) < 1e-15 /*|| d1[left] == 1 || d2[right] == 1*/)
 			{
 				rL[k] = 0;
 				irL[k] = 0;
@@ -161,20 +133,57 @@ void flux::detector_s1(state st, vector<int>& d1, double threshold)
 	
 	for (int i = 0; i < N; ++i)
 	{
-		int left = i;
+		int left = max(i,0);
+		int Lleft = max(i-1, 0);
 		int right = min(i+1, N-1);
+		int Rright = min(i+2, N-1);
 		
-		st.get_U(UL, left);
-		st.get_U(UR, right);
+		vector<double> UL(2), UR(2), U_L, U_R, U_LL, U_RR;
+		
+		st.get_U(U_L, left);
+		st.get_U(U_R, right);
+		st.get_U(U_LL, Lleft);
+		st.get_U(U_RR, Rright);
+		double kappa = 1./3.;
+		
+		vector<double> rR(2), rL(2), irR(2), irL(2);
+		
+		for (int k = 0; k < 2; ++k)
+		{
+			if (fabs(U_RR[k]-U_R[k]) < 1e-15 || fabs((U_R[k]-U_L[k])) < 1e-15)
+			{
+				irR[k] = 0;
+				rR[k] = 0;
+			}
+			else
+			{
+				rR[k] = (U_R[k]-U_L[k])/(U_RR[k]-U_R[k]);
+				irR[k] = 1./rR[k];
+			}
+			
+			if (fabs(U_L[k]-U_LL[k]) < 1e-15 || fabs(U_R[k]-U_L[k]) < 1e-15)
+			{
+				rL[k] = 0;
+				irL[k] = 0;
+			}
+			else
+			{
+				rL[k] = (U_R[k]-U_L[k])/(U_L[k]-U_LL[k]);
+				irL[k] = 1./rL[k];
+			}
+			UL[k] = U_L[k] +1.*( st.psi(rL[k])*(1-kappa)/4*(U_L[k] - U_LL[k]) + st.psi(irL[k])*(1+kappa)/4*(U_R[k] - U_L[k]));
+			UR[k] = U_R[k] +1.*(- st.psi(irR[k])*(1+kappa)/4*(U_R[k] - U_L[k]) - st.psi(rR[k])*(1-kappa)/4*(U_RR[k] - U_R[k]));
+		}
+		
 		FL[0] = -UL[1];
 		FL[1] = pow(UL[0], -gamma);
 		FR[0] = -UR[1];
 		FR[1] = pow(UR[0], -gamma);
 		
-			for (int k=0; k<2; ++k)
-			{
-				Ustar[k] = 0.5*(UL[k]+UR[k]) - 0.5*(FR[k] - FL[k]) / lambdaR[i+1];
-			}
+		for (int k=0; k<2; ++k)
+		{
+			Ustar[k] = 0.5*(UL[k]+UR[k]) - 0.5*(FR[k] - FL[k]) / lambdaR[i+1];
+		}
 		
 		if ((UL[0] - Ustar[0]) > threshold && (UL[1] - Ustar[1]) > threshold )
 			d1[i] = 1;
@@ -193,7 +202,46 @@ void flux::detector_s2(state st, vector<int>& d2, double threshold)
 	for (int i = 0; i < N; ++i)
 	{
 		int left = max(i-1,0);
-		int right = i;
+		int Lleft = max(i-2, 0);
+		int right = min(i, N-1);
+		int Rright = min(i+1, N-1);
+		
+		vector<double> UL(2), UR(2), U_L, U_R, U_LL, U_RR;
+		
+		st.get_U(U_L, left);
+		st.get_U(U_R, right);
+		st.get_U(U_LL, Lleft);
+		st.get_U(U_RR, Rright);
+		double kappa = 1./3.;
+		
+		vector<double> rR(2), rL(2), irR(2), irL(2);
+		
+		for (int k = 0; k < 2; ++k)
+		{
+			if (fabs(U_RR[k]-U_R[k]) < 1e-15 || fabs((U_R[k]-U_L[k])) < 1e-15)
+			{
+				irR[k] = 0;
+				rR[k] = 0;
+			}
+			else
+			{
+				rR[k] = (U_R[k]-U_L[k])/(U_RR[k]-U_R[k]);
+				irR[k] = 1./rR[k];
+			}
+			
+			if (fabs(U_L[k]-U_LL[k]) < 1e-15 || fabs(U_R[k]-U_L[k]) < 1e-15)
+			{
+				rL[k] = 0;
+				irL[k] = 0;
+			}
+			else
+			{
+				rL[k] = (U_R[k]-U_L[k])/(U_L[k]-U_LL[k]);
+				irL[k] = 1./rL[k];
+			}
+			UL[k] = U_L[k] +1.*( st.psi(rL[k])*(1-kappa)/4*(U_L[k] - U_LL[k]) + st.psi(irL[k])*(1+kappa)/4*(U_R[k] - U_L[k]));
+			UR[k] = U_R[k] +1.*(- st.psi(irR[k])*(1+kappa)/4*(U_R[k] - U_L[k]) - st.psi(rR[k])*(1-kappa)/4*(U_RR[k] - U_R[k]));
+		}
 		
 		st.get_U(UL, left);
 		st.get_U(UR, right);
@@ -203,10 +251,9 @@ void flux::detector_s2(state st, vector<int>& d2, double threshold)
 		FR[1] = pow(UR[0], -gamma);
 		
 		for (int k=0; k<2; ++k)
-			{
-				Ustar[k] = 0.5*(UL[k]+UR[k]) - 0.5*(FR[k] - FL[k]) / lambdaR[i];
-			}
-		
+		{
+			Ustar[k] = 0.5*(UL[k]+UR[k]) - 0.5*(FR[k] - FL[k]) / lambdaR[i];
+		}
 
 		if ( (UR[0] - Ustar[0] > threshold) && (Ustar[1] - UR[1] > threshold))
 		{

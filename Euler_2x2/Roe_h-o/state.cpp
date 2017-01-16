@@ -71,9 +71,9 @@ double state::psi(double r)
 		return 0;
 	
 	//return 1;
-	//return 0.5*(1 + fabs(r)/r)*min(1., fabs(r));
+	return 0.5*(1 + fabs(r)/r)*min(1., fabs(r));
 	//return max(max(0.,min(2.,r)),min(1.,2*r));
-	return (r*r+r)/(1+r*r);
+	//return (r*r+r)/(1+r*r);
 };
 
 
@@ -134,17 +134,56 @@ void state::compute_s_lambdaR(vector<double>& sl)
 {
 	vector<double> l;
 	this->compute_lambdaR(l);
-	double dx = 2e-3;
 	int N = U[0].size();
 	sl.resize(N+1);
 	for (int i = 0; i <= N; ++i)
 	{
 		int left = max(0,i-1);
+		int Lleft = max(i-2,0);
 		int right = min(i, N-1);
-		double tauL = U[0][left];
-		double tauR = U[0][right];
-		double s_tauL = U[2][left];
-		double s_tauR = U[2][right];
+		int Rright = min(i+1, N-1);
+		vector<double> tau_L(2), tau_R(2), tau_LL(2), tau_RR(2);
+		
+		tau_L[0] = U[0][left];
+		tau_R[0] = U[0][right];
+		tau_LL[0] = U[0][Lleft];
+		tau_RR[0] = U[0][Rright];
+		tau_L[1] = U[2][left];
+		tau_R[1] = U[2][right];
+		tau_LL[1] = U[2][Lleft];
+		tau_RR[1] = U[2][Rright];
+		
+		double kappa = 1./3.;
+		vector<double> irR(2), rR(2), irL(2), rL(2);
+		
+		for (int k = 0; k < 2; ++k)
+		{
+			if (fabs(tau_RR[k]-tau_R[k]) < 1e-15 || fabs((tau_R[k]-tau_L[k])) < 1e-15)
+			{
+				irR[k] = 0;
+				rR[k] = 0;
+			}
+			else
+			{
+				rR[k] = (tau_R[k]-tau_L[k])/(tau_RR[k]-tau_R[k]);
+				irR[k] = 1./rR[k];
+			}
+			
+			if (fabs(tau_L[k]-tau_LL[k]) < 1e-15 || fabs(tau_R[k]-tau_L[k]) < 1e-15)
+			{
+				rL[k] = 0;
+				irL[k] = 0;
+			}
+			else
+			{
+				rL[k] = (tau_R[k]-tau_L[k])/(tau_L[k]-tau_LL[k]);
+				irL[k] = 1./rL[k];
+			}
+		}
+		double tauL = tau_L[0] +1.*( this->psi(rL[0])*(1-kappa)/4*(tau_L[0] - tau_LL[0]) + this->psi(irL[0])*(1+kappa)/4*(tau_R[0] - tau_L[0]));
+		double tauR = tau_R[0] +1.*(- this->psi(irR[0])*(1+kappa)/4*(tau_R[0] - tau_L[0]) - this->psi(rR[0])*(1-kappa)/4*(tau_RR[0] - tau_R[0]));
+		double s_tauL = tau_L[1] +1.*( this->psi(rL[1])*(1-kappa)/4*(tau_L[1] - tau_LL[1]) + this->psi(irL[1])*(1+kappa)/4*(tau_R[1] - tau_L[1]));
+		double s_tauR = tau_R[1] +1.*(- this->psi(irR[1])*(1+kappa)/4*(tau_R[1] - tau_L[1]) - this->psi(rR[1])*(1-kappa)/4*(tau_RR[1] - tau_R[1]));
 		
 		if(fabs(tauL-tauR) < 1e-15)
 		{
