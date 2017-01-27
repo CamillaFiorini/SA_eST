@@ -24,47 +24,6 @@ void state::get_U(vector<double>& a, int i)
 	
 	return;
 };
-void state::get_tau(vector<double>& a)
-{
-	a = U[0];
-	return;
-};
-double state::get_tau(int i)
-{
-	return U[0][i];
-};
-void state::get_u(vector<double>& a)
-{
-	a = U[1];
-	return;
-};
-
-double state::get_u(int i)
-{
-	return U[1][i];
-};
-
-void state::get_s_tau(vector<double>& a)
-{
-	a = U[2];
-	return;
-};
-double state::get_s_tau(int i)
-{
-	return U[2][i];
-};
-
-void state::get_s_u(vector<double>& a)
-{
-	a = U[3];
-	return;
-};
-
-double state::get_s_u(int i)
-{
-	return U[3][i];
-};
-
 double state::psi(double r)
 {
 	if(r < 1e-15)
@@ -76,50 +35,93 @@ double state::psi(double r)
 	//return (r*r+r)/(1+r*r);
 };
 
+// Functions that return the extrapolated values at the interface i
+void state::get_UL_extrapolated (vector<double>& UL, int i, double kappa)
+{
+	UL.resize(4);
+	int N = this->get_size();
+	int left = max(i-1,0);
+	int Lleft = max(i-2, 0);
+	int right = min(i, N-1);
+	int Rright = min(i+1, N-1);
+	/*
+	vector<double> rL(4), irL(4);
+	
+	for (int k = 0; k < 4; ++k)
+	{
+		if (fabs(U[k][left]-U[k][Lleft]) < 1e-15 || fabs(U[k][right]-U[k][left]) < 1e-15)
+		{
+			rL[k] = 0;
+			irL[k] = 0;
+		}
+		else
+		{
+			rL[k] = (U[k][right]-U[k][left])/(U[k][left]-U[k][Lleft]);
+			irL[k] = 1./rL[k];
+		}
+		UL[k] = U[k][left] +( this->psi(rL[k])*(1-kappa)/4*(U[k][left] - U[k][Lleft]) + this->psi(irL[k])*(1+kappa)/4*(U[k][right] - U[k][left]));
+	}*/
+	for (int k = 0; k < 4; ++k)
+	{
+		double a = U[k][right] - U[k][left];
+		double b = U[k][left] - U[k][Lleft];
+		if (a*b < 1e-10 )
+			UL[k] = U[k][left];
+		else
+			UL[k] = U[k][left] + 0.5*fabs(a)/a*min(fabs(a), fabs(b));
+	}
+	return;
+};
+
+void state::get_UR_extrapolated (vector<double>& UR, int i, double kappa)
+{
+	UR.resize(4);
+	int N = this->get_size();
+	int left = max(i-1,0);
+	int Lleft = max(i-2, 0);
+	int right = min(i, N-1);
+	int Rright = min(i+1, N-1);
+	/*
+	vector<double> rR(4), irR(4);
+	
+	for (int k = 0; k < 4; ++k)
+	{
+		if (fabs(U[k][Rright]-U[k][right]) < 1e-15 || fabs((U[k][right]-U[k][left])) < 1e-15)
+		{
+			irR[k] = 0;
+			rR[k] = 0;
+		}
+		else
+		{
+			rR[k] = (U[k][right]-U[k][left])/(U[k][Rright]-U[k][right]);
+			irR[k] = 1./rR[k];
+		}
+		UR[k] = U[k][right] +1.*(- this->psi(irR[k])*(1+kappa)/4*(U[k][right] - U[k][left]) - this->psi(rR[k])*(1-kappa)/4*(U[k][Rright] - U[k][right]));
+	}
+	*/
+	for (int k = 0; k < 4; ++k)
+	{
+		double a = U[k][Rright] - U[k][right];
+		double b = U[k][right] - U[k][left];
+		if (a*b < 1e-10 )
+			UR[k] = U[k][right];
+		else
+			UR[k] = U[k][right] - 0.5*fabs(a)/a*min(fabs(a), fabs(b));
+	}
+	return;
+};
 
 // compute lambda_R
 void state::compute_lambdaR(vector<double>& l)
 {
 	int N = U[0].size();
 	l.resize(N+1);
+	vector<double> UL, UR;
 	for (int i = 0; i <= N; ++i)
 	{
-		int left = max(0,i-1);
-		int Lleft = max(i-2,0);
-		int right = min(i, N-1);
-		int Rright = min(i+1, N-1);
-		double tau_L = U[0][left];
-		double tau_R = U[0][right];
-		double tau_LL = U[0][Lleft];
-		double tau_RR = U[0][Rright];
-		double kappa = 1./3.;
-		double irR, rR, irL, rL;
-		//vector<int> d1, d2;
-		
-		if (fabs(tau_RR-tau_R) < 1e-15 || fabs((tau_R-tau_L)) < 1e-15 /*|| d1[left] == 1 || d2[right] == 1*/)
-		{
-			irR = 0;
-			rR = 0;
-		}
-		else
-		{
-			rR = (tau_R-tau_L)/(tau_RR-tau_R);
-			irR = 1./rR;
-		}
-		
-		if (fabs(tau_L-tau_LL) < 1e-15 || fabs(tau_R-tau_L) < 1e-15 /*|| d1[left] == 1 || d2[right] == 1*/)
-		{
-			rL = 0;
-			irL = 0;
-		}
-		else
-		{
-			rL = (tau_R-tau_L)/(tau_L-tau_LL);
-			irL = 1./rL;
-		}
-		
-		double tauL = tau_L +1.*( this->psi(rL)*(1-kappa)/4*(tau_L - tau_LL) + this->psi(irL)*(1+kappa)/4*(tau_R - tau_L));
-		double tauR = tau_R +1.*(- this->psi(irR)*(1+kappa)/4*(tau_R - tau_L) - this->psi(rR)*(1-kappa)/4*(tau_RR - tau_R));
+		this->get_UL_extrapolated(UL, i);
+		this->get_UR_extrapolated(UR, i);
+		double tauL (UL[0]), tauR(UR[0]);
 		
 		if(fabs(tauL-tauR) < 1e-15)
 			l[i] = sqrt( gamma*pow(tauL, -gamma-1) );
@@ -136,54 +138,13 @@ void state::compute_s_lambdaR(vector<double>& sl)
 	this->compute_lambdaR(l);
 	int N = U[0].size();
 	sl.resize(N+1);
+	vector<double> UL, UR;
 	for (int i = 0; i <= N; ++i)
 	{
-		int left = max(0,i-1);
-		int Lleft = max(i-2,0);
-		int right = min(i, N-1);
-		int Rright = min(i+1, N-1);
-		vector<double> tau_L(2), tau_R(2), tau_LL(2), tau_RR(2);
+		this->get_UL_extrapolated(UL, i);
+		this->get_UR_extrapolated(UR, i);
 		
-		tau_L[0] = U[0][left];
-		tau_R[0] = U[0][right];
-		tau_LL[0] = U[0][Lleft];
-		tau_RR[0] = U[0][Rright];
-		tau_L[1] = U[2][left];
-		tau_R[1] = U[2][right];
-		tau_LL[1] = U[2][Lleft];
-		tau_RR[1] = U[2][Rright];
-		
-		double kappa = 1./3.;
-		vector<double> irR(2), rR(2), irL(2), rL(2);
-		
-		for (int k = 0; k < 2; ++k)
-		{
-			if (fabs(tau_RR[k]-tau_R[k]) < 1e-15 || fabs((tau_R[k]-tau_L[k])) < 1e-15)
-			{
-				irR[k] = 0;
-				rR[k] = 0;
-			}
-			else
-			{
-				rR[k] = (tau_R[k]-tau_L[k])/(tau_RR[k]-tau_R[k]);
-				irR[k] = 1./rR[k];
-			}
-			
-			if (fabs(tau_L[k]-tau_LL[k]) < 1e-15 || fabs(tau_R[k]-tau_L[k]) < 1e-15)
-			{
-				rL[k] = 0;
-				irL[k] = 0;
-			}
-			else
-			{
-				rL[k] = (tau_R[k]-tau_L[k])/(tau_L[k]-tau_LL[k]);
-				irL[k] = 1./rL[k];
-			}
-		}
-		double tauL = tau_L[0] +1.*( this->psi(rL[0])*(1-kappa)/4*(tau_L[0] - tau_LL[0]) + this->psi(irL[0])*(1+kappa)/4*(tau_R[0] - tau_L[0]));
-		double tauR = tau_R[0] +1.*(- this->psi(irR[0])*(1+kappa)/4*(tau_R[0] - tau_L[0]) - this->psi(rR[0])*(1-kappa)/4*(tau_RR[0] - tau_R[0]));
-		double s_tauL = tau_L[1] +1.*( this->psi(rL[1])*(1-kappa)/4*(tau_L[1] - tau_LL[1]) + this->psi(irL[1])*(1+kappa)/4*(tau_R[1] - tau_L[1]));
-		double s_tauR = tau_R[1] +1.*(- this->psi(irR[1])*(1+kappa)/4*(tau_R[1] - tau_L[1]) - this->psi(rR[1])*(1-kappa)/4*(tau_RR[1] - tau_R[1]));
+		double tauL (UL[0]), tauR(UR[0]), s_tauL (UL[2]), s_tauR(UR[2]);
 		
 		if(fabs(tauL-tauR) < 1e-15)
 		{

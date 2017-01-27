@@ -22,15 +22,11 @@ public:
 	inline void set_gamma(double g) {gamma=g;};
 	inline double get_gamma() {return gamma;};
 	void get_U(vector<double>&, int);
-	void get_tau(vector<double>&);
-	double get_tau(int);
-	void get_u(vector<double>&);
-	double get_u(int);
-	void get_s_tau(vector<double>&);
-	double get_s_tau(int);
-	void get_s_u(vector<double>&);
-	double get_s_u(int);
 	
+	// Functions that return the extrapolated values at the interface i
+	void get_UL_extrapolated (vector<double>&, int, double=1./3.);
+	void get_UR_extrapolated (vector<double>&, int, double=1./3.);
+
 	double psi(double);
 	
 	void compute_lambdaR(vector<double>&);
