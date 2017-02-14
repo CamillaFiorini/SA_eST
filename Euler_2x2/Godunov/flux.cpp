@@ -81,7 +81,7 @@ void flux::residual(state st, vector<vector<double> >& R, vector<vector<double> 
 			{
 				if (d2[i] == 1 && fabs(tauR - Ustar[0]) > 1e-15)
 				{
-						sigma2 = (Ustar[1] - uR)/(tauR - Ustar[0]) ;
+					sigma2 = (Ustar[1] - uR)/(tauR - Ustar[0]) ;
 				}
 				else
 				{
@@ -100,15 +100,15 @@ void flux::residual(state st, vector<vector<double> >& R, vector<vector<double> 
 		{
 			R[0][i] += -Ustar[1];
 			R[1][i] += pow(Ustar[0], -gamma);
-			R[2][i] += -s_u_star;//sigma2*(s_tau_star - UR[2]);
-			R[3][i] += -gamma*s_tau_star*pow(Ustar[0], -gamma-1); //sigma2*(s_u_star - UR[3]);
+			R[2][i] += sigma2*(s_tau_star - UR[2]);//-s_u_star;
+			R[3][i] += sigma2*(s_u_star - UR[3]);//-gamma*s_tau_star*pow(Ustar[0], -gamma-1);
 		}
 		if (i > 0)
 		{
 			R[0][i-1] -= -Ustar[1];
 			R[1][i-1] -= pow(Ustar[0], -gamma);
-			R[2][i-1] -= -s_u_star; //sigma1*(s_tau_star - UL[2]);
-			R[3][i-1] -= -gamma*s_tau_star*pow(Ustar[0], -gamma-1); //sigma1*(s_u_star - UL[3]);
+			R[2][i-1] -= sigma1*(s_tau_star - UL[2]);//-s_u_star; //
+			R[3][i-1] -= sigma1*(s_u_star - UL[3]);//-gamma*s_tau_star*pow(Ustar[0], -gamma-1); //
 		}
 		
 		if (isnan(R[3][i]))
