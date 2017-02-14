@@ -11,7 +11,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-2), T(0.1), t(0), dt;
+	double xa(0), xb(1), dx(1e-4), T(0.08), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4), x_c(0.5);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);
@@ -47,13 +47,17 @@ int main()
 	flux fl;
 	
 	// printing on file initial data
-	ofstream file_shock1("../../../results/Euler_2x2_Roe/shock_raref/dx1e-2/source_tau.dat");
-	ofstream file_shock2("../../../results/Euler_2x2_Roe/shock_raref/dx1e-2/source_u.dat");
-	ofstream file_u ("../../../results/Euler_2x2_Roe/shock_raref/dx1e-2/u.dat");
-	ofstream file_tau ("../../../results/Euler_2x2_Roe/shock_raref/dx1e-2/tau.dat");
-	ofstream file_s_u ("../../../results/Euler_2x2_Roe/shock_raref/dx1e-2/s_u.dat");
-	ofstream file_s_tau ("../../../results/Euler_2x2_Roe/shock_raref/dx1e-2/s_tau.dat");
-	ofstream file_t ("../../../results/Euler_2x2_Roe/shock_raref/dx1e-2/t.dat");
+/*	ofstream file_u ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/u.dat");
+	ofstream file_tau ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/tau.dat");
+	ofstream file_s_u ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/s_u.dat");
+	ofstream file_s_tau ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/s_tau.dat");
+	ofstream file_t ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/t.dat");
+*/
+	ofstream file_u ("results/shock_raref/dx1e-4/u.dat");
+	ofstream file_tau ("results/shock_raref/dx1e-4/tau.dat");
+	ofstream file_s_u ("results/shock_raref/dx1e-4/s_u.dat");
+	ofstream file_s_tau ("results/shock_raref/dx1e-4/s_tau.dat");
+	ofstream file_t ("results/shock_raref/dx1e-4/t.dat");
 	
 	file_u.precision(15);
 	file_tau.precision(15);
@@ -81,22 +85,12 @@ int main()
 		++cont;
 		if(cont%100==0)
 		{
-			cout << "t = " << t << endl;
+//			cout << "t = " << t << endl;
 		}
 	//	fl.source(st, dirac);
 		fl.residual(st, R, S);
 	//	fl.detector_s1(st, dirac1);
 	//	fl.detector_s2(st, dirac2);
-		
-		/*** printing shock file ***/
-		for (int k=0; k < N; ++k)
-		{
-			file_shock1 << S[0][k] << "\t";
-			file_shock2 << S[1][k] << "\t";
-		}
-		file_shock1 << endl;
-		file_shock2 << endl;
-		/***************************/
 
 		/*** dt computation ***/
 		st.compute_lambdaR(sR);
@@ -111,20 +105,6 @@ int main()
 		
 		for (int i=0; i<N; ++i)
 		{
-			/*
-			double xi = M.get_xi(i);
-			if (xi < sigma2*t + x_c)
-			{
-				U[0][i] = tauL;
-				U[1][i] = uL;
-			}
-			else
-			{
-				U[0][i] = tauR;
-				U[1][i] = uR;
-			}
-			*/
-			
 			for (int k=0; k<2; ++k)
 			{
 				U[k][i] = Uold[k][i] + dt/dx*R[k][i];
@@ -135,20 +115,22 @@ int main()
 		Uold = U;
 		st.set_U(U);
 		t += dt;
-
-		for (int k=0; k<N; ++k)
+		if (cont%100==0 || !first_time)
 		{
-			file_tau << U[0][k] << "\t";
-			file_u << U[1][k] << "\t";
-			file_s_tau << U[2][k] << "\t";
-			file_s_u << U[3][k] << "\t";
+			for (int k=0; k<N; ++k)
+			{
+				file_tau << U[0][k] << "\t";
+				file_u << U[1][k] << "\t";
+				file_s_tau << U[2][k] << "\t";
+				file_s_u << U[3][k] << "\t";
 
+			}
+			file_tau << endl;
+			file_u << endl;
+			file_s_tau << endl;
+			file_s_u << endl;
+			file_t << t << endl;
 		}
-		file_tau << endl;
-		file_u << endl;
-		file_s_tau << endl;
-		file_s_u << endl;
-		file_t << t << endl;
 	}
 	return 0;
 }

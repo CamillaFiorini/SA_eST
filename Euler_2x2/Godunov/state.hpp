@@ -15,7 +15,6 @@ private:
 public:
 	state();
 	state(vector<double>,vector<double>,vector<double>,vector<double>, double);
-	double compute_s(int i);
 	inline int get_size() const {return U[0].size();};
 	inline void get_U(vector<vector<double> >& a) {a = U;};
 	inline void set_U(vector<vector<double> >& a) {U = a;};
