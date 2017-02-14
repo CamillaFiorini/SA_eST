@@ -2,6 +2,7 @@
 #define MESH_HPP
 
 #include<vector>
+#include<cmath>
 
 using namespace std;
 
@@ -23,7 +24,7 @@ public:
 	inline int get_N() {return N;}
 	inline void set_xa(double A) {xa = A;};
 	inline void set_xb(double B) {xb = B;};
-	inline void set_Dx(double delta) {Dx = delta; N = int((xb-xa)/Dx); };
+	inline void set_Dx(double delta) {Dx = delta; N = int(round((xb-xa)/Dx)); };
 	inline void set_N(int n) {N=n; Dx=(xb-xa)/N;}
 	
 };
