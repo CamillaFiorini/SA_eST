@@ -46,7 +46,7 @@ void roe::compute_s_lambda(vector<double>& sl) const
 	return;
 };
 
-void roe::compute_residual(vector<double>& R) const
+void roe::compute_residual(vector<vector<double> >& R) const
 {
 	return;
 };
