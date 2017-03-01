@@ -24,6 +24,7 @@ public:
 	inline int get_size() const {return U[0].size();};
 	inline void set_U(const vector<vector<double> >& u) {U=u;return;};
 	inline void get_U(vector<vector<double> >& u) const {u=U;return;};
+	void get_U(vector<double>& u, int i) const;
 	inline void set_gamma(const double g) {gamma = g; return;};
 	inline double get_gamma() const {return gamma;};
 	

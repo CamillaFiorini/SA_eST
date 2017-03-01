@@ -1,6 +1,18 @@
 #include"godunov.hpp"
-void godunov::compute_lambda(vector<double>&) const
+void godunov::compute_lambda(vector<double>& l) const
 {
+	int N = U[0].size();
+	l.resize(N+1);
+	for (int i = 0; i <= N; ++i)
+	{
+		int left = max(0,i-1);
+		int right = min(i, N-1);
+		vector<double> UL, UR, Ustar;
+		this->get_U(UL, left);
+		this->get_U(UR, right);
+		this->compute_U_star(UL, UR, Ustar);
+		l[i] = sqrt( gamma*pow(Ustar[0], -gamma-1) );
+	}
 	return;
 };
 void godunov::compute_U_star(const vector<double>& UL, const vector<double>& UR, vector<double>& Ustar) const
@@ -32,30 +44,48 @@ void godunov::compute_residual(vector<vector<double> >& R) const
 {
 	R.resize(4);
 	int N = this->get_size();
-	vector<vector<double> > F(4);
 	for (int k = 0; k < 4; ++k)
-	{
 		R[k].assign(N,0);
-		F[k].resize(N+1);
-	}
-	/*
- 	for (int i = 0; i < N; ++i)
+	
+ 	for (int i = 0; i <= N; ++i)
 	{
+		int left = max(0,i-1);
+		int right = min(i, N-1);
+		vector<double> UL, UR, Ustar;
+		this->get_U(UL, left);
+		this->get_U(UR, right);
+		this->compute_U_star(UL, UR, Ustar);
+		
+		double k1(0), k2(0);
+		if(i > 0)
+		{
+			if( (Ustar[0]-UL[0] < -1e-15) && (Ustar[1] - UL[1] < -1e-15) ) // if 1-shock
+				k1 = (Ustar[1] - UL[1])/(UL[0] - Ustar[0]);
+			if ( (Ustar[0]-UL[0] > 1e-15) && (Ustar[1] - UL[1] > 1e-15) ) // if 1-raref
+				k1 = -sqrt(gamma*pow(Ustar[0], -gamma-1));
+		}
+		if (i < N)
+		{
+			if( (Ustar[0]-UR[0] < -1e-15) && (Ustar[1] - UR[1] > 1e-15) ) // if 2-shock
+				k2 = (Ustar[1] - UR[1])/(UR[0] - Ustar[0]);
+			if( (Ustar[0]-UR[0] > 1e-15) && (Ustar[1] - UR[1] < -1e-15) ) // if 2-raref
+				k2 = sqrt(gamma*pow(Ustar[0], -gamma-1));
+		}
 		if (i < N)
 		{
 			R[0][i] += -Ustar[1];
 			R[1][i] += pow(Ustar[0], -gamma);
-			R[2][i] += sigma2*(s_tau_star - UR[2]);//-s_u_star;
-			R[3][i] += sigma2*(s_u_star - UR[3]);//-gamma*s_tau_star*pow(Ustar[0], -gamma-1);
+			R[2][i] += k2*(Ustar[2] - UR[2]);
+			R[3][i] += k2*(Ustar[3] - UR[3]);
 		}
 		if (i > 0)
 		{
 			R[0][i-1] -= -Ustar[1];
 			R[1][i-1] -= pow(Ustar[0], -gamma);
-			R[2][i-1] -= sigma1*(s_tau_star - UL[2]);//-s_u_star; //
-			R[3][i-1] -= sigma1*(s_u_star - UL[3]);//-gamma*s_tau_star*pow(Ustar[0], -gamma-1); //
+			R[2][i-1] -= k1*(Ustar[2] - UL[2]);
+			R[3][i-1] -= k1*(Ustar[3] - UL[3]);
 		}
-	}*/
+	}
 	
 	return;
 };

@@ -9,3 +9,11 @@ state::state(vector<double> tau, vector<double> u, vector<double> s_tau, vector<
 	U[3] = s_u;
 	gamma = g;
 };
+
+void state::get_U(vector<double>& u, int i) const
+{
+	u.resize(4);
+	for (int k = 0; k < 4; ++k)
+		u[k] = U[k][i];
+	return;
+};
