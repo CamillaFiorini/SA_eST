@@ -82,3 +82,8 @@ void roe_II::get_UR_extrapolated (vector<double>& UR, int i) const
 	 }*/
 	return;
 };
+
+void roe_II::compute_residual(vector<vector<double> >&) const
+{
+	return;
+};

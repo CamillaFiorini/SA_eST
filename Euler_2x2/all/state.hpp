@@ -29,7 +29,6 @@ public:
 	inline double get_gamma() const {return gamma;};
 	
 	// Methods
-	virtual void compute_lambda(vector<double>&) const = 0;
 	virtual void compute_U_star(const vector<double>&, const vector<double>&, vector<double>&) const = 0;
 	virtual void compute_residual(vector<vector<double> >&) const = 0;
 	

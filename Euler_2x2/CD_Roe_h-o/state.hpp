@@ -27,13 +27,16 @@ public:
 	void get_UL_extrapolated (vector<double>&, int, double=1./3.);
 	void get_UR_extrapolated (vector<double>&, int, double=1./3.);
 
+	
+	void compute_Ustar(vector<vector<double> >&);
+	
 	double psi(double);
 	
 	void compute_lambdaR(vector<double>&);
 	void compute_s_lambdaR(vector<double>&);
 	
-//	void detector_s1(vector<int>&, double=0.0);
-//	void detector_s2(vector<int>&, double=0.0);
+	void detector_s1(vector<int>&, double=0.0);
+	void detector_s2(vector<int>&, double=0.0);
 };
 
 #endif

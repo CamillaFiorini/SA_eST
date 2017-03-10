@@ -11,7 +11,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-4), T(0.08), t(0), dt;
+	double xa(0), xb(1), dx(1e-3), T(0.03), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4), x_c(0.5);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);
@@ -21,7 +21,7 @@ int main()
 	vector<double> tau0(N, tauR);
 	// sensitivities
 	vector<double> s_u0(N, 0);
-	vector<double> s_tau0(N,0);
+	vector<double> s_tau0(N,1);
 	
 	vector<int> dirac1(2), dirac2(2);
 	vector<vector<double> > dirac;
@@ -33,7 +33,7 @@ int main()
 		u0[k] = uL;
 		tau0[k] = tauL;
 		s_tau0[k] = 0;//1;
-		s_u0[k] = 1;//-9.351212140372281;
+		s_u0[k] = 0;//-9.351212140372281;
 	}
 	
 	state st(tau0, u0, s_tau0, s_u0, gamma);
@@ -47,18 +47,18 @@ int main()
 	flux fl;
 	
 	// printing on file initial data
-/*	ofstream file_u ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/u.dat");
-	ofstream file_tau ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/tau.dat");
-	ofstream file_s_u ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/s_u.dat");
-	ofstream file_s_tau ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/s_tau.dat");
-	ofstream file_t ("../../../results/Euler_2x2_Roe/shock_raref/convergence/dx1e-5/t.dat");
-*/
+	ofstream file_u ("../../../results/Euler_2x2_Roe/shock_raref/tauR/u.dat");
+	ofstream file_tau ("../../../results/Euler_2x2_Roe/shock_raref/tauR/tau.dat");
+	ofstream file_s_u ("../../../results/Euler_2x2_Roe/shock_raref/tauR/s_u.dat");
+	ofstream file_s_tau ("../../../results/Euler_2x2_Roe/shock_raref/tauR/s_tau.dat");
+	ofstream file_t ("../../../results/Euler_2x2_Roe/shock_raref/tauR/t.dat");
+/*
 	ofstream file_u ("results/shock_raref/dx1e-4/u.dat");
 	ofstream file_tau ("results/shock_raref/dx1e-4/tau.dat");
 	ofstream file_s_u ("results/shock_raref/dx1e-4/s_u.dat");
 	ofstream file_s_tau ("results/shock_raref/dx1e-4/s_tau.dat");
 	ofstream file_t ("results/shock_raref/dx1e-4/t.dat");
-	
+*/
 	file_u.precision(15);
 	file_tau.precision(15);
 	file_s_u.precision(15);
@@ -115,7 +115,7 @@ int main()
 		Uold = U;
 		st.set_U(U);
 		t += dt;
-		if (cont%100==0 || !first_time)
+		if (cont%10==0 || !first_time)
 		{
 			for (int k=0; k<N; ++k)
 			{

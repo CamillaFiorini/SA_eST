@@ -15,14 +15,14 @@ int main()
 	double xa(0), xb(1), dx(1e-2), T(0.1), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
-	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4), x_c(0.5);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);
-	double sigma2 ((uR - uL)/(tauL - tauR));
+	double uL(0), uR(2.246510973213954), tauL(0.2), tauR(1), gamma(1.4), x_c(0.5);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);//uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4), x_c(0.5);
 	double cfl(0.95);
+	// state vectors
 	vector<double> u0(N, uR);
 	vector<double> tau0(N, tauR);
 	// sensitivities
-	vector<double> s_u0(N, 0);
-	vector<double> s_tau0(N,0);
+	vector<double> s_u0(N, 1.183215956619923);//(N, 0);
+	vector<double> s_tau0(N,1);
 	
 	/*****************************************************************************/
 	/********************************** CD ***************************************/
@@ -31,38 +31,31 @@ int main()
 	x_bar[0] = xa; x_bar[N] = xb;
 	vector<vector<double> > U_bar(4, u0), F_bar(4, sigma);
 	/*****************************************************************************/
-
-	vector<int> dirac1(2), dirac2(2);
-	vector<vector<double> > dirac;
-	
-	cout.precision(15);
 	
 	for (int k=0; k < N/2; ++k)
 	{
 		u0[k] = uL;
 		tau0[k] = tauL;
 		s_tau0[k] = 0;//1;
-		s_u0[k] = 1;//-9.351212140372281;
+		s_u0[k] = 0;//-9.351212140372281;
 	}
 	
 	state st(tau0, u0, s_tau0, s_u0, gamma);
-	state st_int(tau0, u0, s_tau0, s_u0, gamma);
 	vector<double> zeros(N+1, 0);
-	vector<vector<double> > U, Uold, U_int, R, S;
+	vector<vector<double> > U, Uold, R, S;
 	
 	st.get_U(Uold);
 	st.get_U(U);
-	st.get_U(U_int);
 	
 	vector<double> lambda;
 	flux fl;
 	
 	// printing on file initial data
-	ofstream file_u ("../../../results/Euler_2x2_Roe_h-o/shock_raref/u.dat");
-	ofstream file_tau ("../../../results/Euler_2x2_Roe_h-o/shock_raref/tau.dat");
-	ofstream file_s_u ("../../../results/Euler_2x2_Roe_h-o/shock_raref/s_u.dat");
-	ofstream file_s_tau ("../../../results/Euler_2x2_Roe_h-o/shock_raref/s_tau.dat");
-	ofstream file_t ("../../../results/Euler_2x2_Roe_h-o/shock_raref/t.dat");
+	ofstream file_u ("../../../results/Euler_2x2_CD_Roe_h-o/1_raref/u.dat");
+	ofstream file_tau ("../../../results/Euler_2x2_CD_Roe_h-o/1_raref/tau.dat");
+	ofstream file_s_u ("../../../results/Euler_2x2_CD_Roe_h-o/1_raref/s_u.dat");
+	ofstream file_s_tau ("../../../results/Euler_2x2_CD_Roe_h-o/1_raref/s_tau.dat");
+	ofstream file_t ("../../../results/Euler_2x2_CD_Roe_h-o/1_raref/t.dat");
 	
 	file_u.precision(15);
 	file_tau.precision(15);
@@ -88,12 +81,10 @@ int main()
 	while (t < T)
 	{
 		++cont;
-		if(cont%100==0)
+		if(cont%20==0)
 		{
 			cout << "t = " << t << endl;
 		}
-
-		fl.residual(st, R, S);
 		
 		/********************************************************************************************************/
 		/******************************************** dt computation ********************************************/
@@ -114,6 +105,7 @@ int main()
 		vector<double> s_lambda;
 		st.compute_s_lambdaR(s_lambda);
 		st.compute_Ustar(Ustar);
+		fl.residual(st, R, S);
 		
 		sigma.assign(N+1,0);
 		for (int i = 1; i < N; ++i)
@@ -129,9 +121,6 @@ int main()
 					sigma[i] = lambda[i];
 				}
 			}
-			double left = max(i-2, 0);
-			double right = min(i+1,N-1);
-			
 			x_bar[i] = dx*i + sigma[i]*dt;
 		}
 		/********************************************************************************************************/
@@ -142,10 +131,10 @@ int main()
 		for (int i=0; i<N; ++i)
 		{
 			double dxi = (x_bar[i+1]-x_bar[i]);
-			for (int k=0; k<2; ++k)
+			for (int k = 0; k < 4; ++k)
 			{
-				U_bar[k][i] = 1.0/dxi*( (dx + 0.5*dt*(-lambda[i+1]-lambda[i]))*Uold[k][i] + (sigma[i+1]+lambda[i+1])*0.5*dt*Ustar[k][i+1] + (lambda[i]-sigma[i])*0.5*dt*Ustar[k][i]);
-				U_bar[k+2][i] = 1.0/dxi*( (dx + 0.5*dt*(-lambda[i+1]-lambda[i]))*Uold[k+2][i] + (sigma[i+1]+lambda[i+1])*0.5*dt*Ustar[k+2][i+1] + (lambda[i]-sigma[i])*0.5*dt*Ustar[k+2][i]);
+				U_bar[k][i] = 1.0/dxi*( (dx + dt*(-lambda[i+1]-lambda[i]))*Uold[k][i] + (sigma[i+1]+lambda[i+1])*dt*Ustar[k][i+1] + (lambda[i]-sigma[i])*dt*Ustar[k][i]);
+				U[k][i] = Uold[k][i] + dt/dx*R[k][i];
 			}
 		}
 		/********************************************************************************************************/
@@ -156,51 +145,26 @@ int main()
 		double an;
 		can(cont, an);
 		/***********************/
-		
-		for (int i=0; i<N; ++i)
+		/*
+		for (int i = 0; i < N; ++i)
 		{
-			for (int k=0; k<2; ++k)
+			for (int k = 0; k < 4; ++k)
 			{
 				if (an < dt/dx*max(0.0, sigma[i]))
 				{
-					U_int[k][i] = U_bar[k][i-1];
+					U[k][i] = U_bar[k][i-1];
 				}
 				if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
 				{
-					U_int[k][i] = U_bar[k][i];
+					U[k][i] = U_bar[k][i];
 				}
 				if (an > 1+dt/dx*min(0.0, sigma[i+1]))
 				{
-					U_int[k][i] = U_bar[k][i+1];
-				}
-				
-				if (an < dt/dx*max(0.0, s_sigma[i]))
-				{
-					U_int[k+2][i] = U_bar[k+2][i-1];
-				}
-				if (an > dt/dx*max(0.0, s_sigma[i]) && an < 1+dt/dx*min(0.0, s_sigma[i+1]))
-				{
-					U_int[k+2][i] = U_bar[k+2][i];
-				}
-				if (an > 1+dt/dx*min(0.0, s_sigma[i+1]))
-				{
-					U_int[k+2][i] = U_bar[k+2][i+1];
+					U[k][i] = U_bar[k][i+1];
 				}
 			}
 		}
-		
-		st_int.set_U(U_int);
-		fl.residual(st_int, R, S);
-		
-		for (int i=0; i<N; ++i)
-		{
-			for (int k=0; k<2; ++k)
-			{
-				U[k][i] = Uold[k][i] + dt/dx*R[k][i];
-				U[k+2][i] = Uold[k+2][i] + dt/dx*R[k+2][i] + dt/dx*S[k][i];
-			}
-		}
-		
+		*/
 		Uold = U;
 		st.set_U(U);
 		t += dt;

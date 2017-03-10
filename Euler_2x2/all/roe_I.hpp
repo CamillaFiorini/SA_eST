@@ -15,5 +15,6 @@ public:
 	// Methods
 	void get_UL_extrapolated (vector<double>&, int) const;
 	void get_UR_extrapolated (vector<double>&, int) const;
+	void compute_residual(vector<vector<double> >&) const;
 };
 #endif

@@ -7,7 +7,6 @@ void flux::compute(state st, vector<vector<double> >& F)
 */
 void flux::residual(state st, vector<vector<double> >& R, vector<vector<double> >& S)
 {
-	vector<vector<double> > F(4);
 	vector<double> lambdaR, s_lambdaR;
 	vector<int> d1, d2;
 	st.compute_lambdaR(lambdaR);
@@ -20,7 +19,6 @@ void flux::residual(state st, vector<vector<double> >& R, vector<vector<double> 
 	S[1].assign(N,0);
 	for (int k=0; k<4; ++k)
 	{
-		F[k].resize(N+1);
 		R[k].assign(N, 0);
 	}
 	

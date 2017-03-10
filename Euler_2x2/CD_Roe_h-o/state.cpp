@@ -44,7 +44,7 @@ void state::get_UL_extrapolated (vector<double>& UL, int i, double kappa)
 	int Lleft = max(i-2, 0);
 	int right = min(i, N-1);
 	int Rright = min(i+1, N-1);
-	
+	/*
 	vector<double> rL(4), irL(4);
 	
 	for (int k = 0; k < 4; ++k)
@@ -60,7 +60,7 @@ void state::get_UL_extrapolated (vector<double>& UL, int i, double kappa)
 			irL[k] = 1./rL[k];
 		}
 		UL[k] = U[k][left] +( this->psi(rL[k])*(1-kappa)/4*(U[k][left] - U[k][Lleft]) + this->psi(irL[k])*(1+kappa)/4*(U[k][right] - U[k][left]));
-	}/*
+	}*/
 	for (int k = 0; k < 4; ++k)
 	{
 		double a = U[k][right] - U[k][left];
@@ -69,7 +69,7 @@ void state::get_UL_extrapolated (vector<double>& UL, int i, double kappa)
 			UL[k] = U[k][left];
 		else
 			UL[k] = U[k][left] + 0.5*fabs(a)/a*min(fabs(a), fabs(b));
-	}*/
+	}
 	return;
 };
 
@@ -81,7 +81,7 @@ void state::get_UR_extrapolated (vector<double>& UR, int i, double kappa)
 	int Lleft = max(i-2, 0);
 	int right = min(i, N-1);
 	int Rright = min(i+1, N-1);
-	
+	/*
 	vector<double> rR(4), irR(4);
 	
 	for (int k = 0; k < 4; ++k)
@@ -98,7 +98,7 @@ void state::get_UR_extrapolated (vector<double>& UR, int i, double kappa)
 		}
 		UR[k] = U[k][right] +1.*(- this->psi(irR[k])*(1+kappa)/4*(U[k][right] - U[k][left]) - this->psi(rR[k])*(1-kappa)/4*(U[k][Rright] - U[k][right]));
 	}
-	/*
+	*/
 	for (int k = 0; k < 4; ++k)
 	{
 		double a = U[k][Rright] - U[k][right];
@@ -107,7 +107,58 @@ void state::get_UR_extrapolated (vector<double>& UR, int i, double kappa)
 			UR[k] = U[k][right];
 		else
 			UR[k] = U[k][right] - 0.5*fabs(a)/a*min(fabs(a), fabs(b));
-	}*/
+	}
+	return;
+};
+
+void state::compute_Ustar(vector<vector<double> >& Ustar)
+{
+	
+	int N = U[0].size();
+	Ustar.resize(4);
+	for (int k=0; k<4; ++k)
+		Ustar[k].assign(N+1, 0);
+	
+	vector<double> lambda, s_lambda;
+	vector<int> d1, d2;
+	this->compute_lambdaR(lambda);
+	this->compute_s_lambdaR(s_lambda);
+	this->detector_s1(d1);
+	this->detector_s2(d2);
+	vector<double> UR(4), UL(4);
+	
+	vector<double> FL(4), FR(4);
+	for (int i = 0; i <= N; ++i)
+	{
+		this->get_UR_extrapolated(UR, i);
+		this->get_UL_extrapolated(UL, i);
+		
+		int left = max(i-1,0);
+		int right = min(i, N-1);
+	/*	for (int k = 0; k < 4; ++k)
+		{
+			UR[k] = U[k][right];
+			UL[k] = U[k][left];
+		}
+	*/
+		FL[0] = -UL[1];
+		FL[1] = pow(UL[0], -gamma);
+		FL[2] = -UL[3];
+		FL[3] = -gamma*UL[2]*pow(UL[0], -gamma-1);
+		
+		FR[0] = -UR[1];
+		FR[1] = pow(UR[0], -gamma);
+		FR[2] = -UR[3];
+		FR[3] = -gamma*UR[2]*pow(UR[0], -gamma-1);
+		for (int k = 0; k < 2; ++k)
+		{
+			Ustar[k][i] = 0.5*(UL[k] + UR[k]) - 0.5/lambda[i]*(FR[k]-FL[k]);
+			Ustar[k+2][i] = 0.5*(UL[k+2] + UR[k+2]) - 0.5/lambda[i]*(FR[k+2]-FL[k+2]) + 0.5*s_lambda[i]/lambda[i]*((UR[k]-Ustar[k][i])*d2[right] + (UL[k] - Ustar[k][i])*d1[left]);
+		}
+	}
+	
+	return;
+
 	return;
 };
 
@@ -158,3 +209,61 @@ void state::compute_s_lambdaR(vector<double>& sl)
 	
 	return;
 };
+
+void state::detector_s1(vector<int>& d1, double threshold)
+{
+	int N (this->get_size());
+	d1.assign(N, 0);
+	vector<double> UL, UR, lambdaR, Ustar(2), FL(2), FR(2);
+	this->compute_lambdaR(lambdaR);
+	
+	for (int i = 0; i < N; ++i)
+	{
+		this->get_UL_extrapolated(UL, i);
+		this->get_UR_extrapolated(UR, i);
+		
+		FL[0] = -UL[1];
+		FL[1] = pow(UL[0], -gamma);
+		FR[0] = -UR[1];
+		FR[1] = pow(UR[0], -gamma);
+		
+		for (int k=0; k<2; ++k)
+		{
+			Ustar[k] = 0.5*(UL[k]+UR[k]) - 0.5*(FR[k] - FL[k]) / lambdaR[i+1];
+		}
+		
+		if ((UL[0] - Ustar[0]) > threshold && (UL[1] - Ustar[1]) > threshold )
+			d1[i] = 1;
+	}
+	return;
+}
+
+void state::detector_s2(vector<int>& d2, double threshold)
+{
+	int N (this->get_size());
+	d2.assign(N, 0);
+	vector<double> UL, UR, lambdaR, Ustar(2), FL(2), FR(2);
+	this->compute_lambdaR(lambdaR);
+	
+	for (int i = 0; i < N; ++i)
+	{
+		this->get_UL_extrapolated(UL, i);
+		this->get_UR_extrapolated(UR, i);
+		
+		FL[0] = -UL[1];
+		FL[1] = pow(UL[0], -gamma);
+		FR[0] = -UR[1];
+		FR[1] = pow(UR[0], -gamma);
+		
+		for (int k=0; k<2; ++k)
+		{
+			Ustar[k] = 0.5*(UL[k]+UR[k]) - 0.5*(FR[k] - FL[k]) / lambdaR[i];
+		}
+		
+		if ( (UR[0] - Ustar[0] > threshold) && (Ustar[1] - UR[1] > threshold))
+		{
+			d2[i] = 1;
+		}
+	}
+	return;
+}

@@ -11,10 +11,10 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-2), T(0.1), t(0), dt;
+	double xa(0), xb(1), dx(1e-2), T(0.03), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
-	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4), x_c(0.5);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);
+	double uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);//uL(0), uR(1), tauL(0.4), tauR(0.5), gamma(1.4), x_c(0.5);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);
 	double sigma2 ((uR - uL)/(tauL - tauR));
 	double cfl(0.95);
 	vector<double> u0(N, uR);
@@ -32,8 +32,8 @@ int main()
 	{
 		u0[k] = uL;
 		tau0[k] = tauL;
-		s_tau0[k] = 0;//1;
-		s_u0[k] = 1;//-9.351212140372281;
+		s_tau0[k] = 1;
+		s_u0[k] = -9.351212140372281;
 	}
 	
 	state st(tau0, u0, s_tau0, s_u0, gamma);
@@ -49,11 +49,11 @@ int main()
 	flux fl;
 	
 	// printing on file initial data
-	ofstream file_u ("../../../results/Euler_2x2_Roe_h-o/shock_raref/u.dat");
-	ofstream file_tau ("../../../results/Euler_2x2_Roe_h-o/shock_raref/tau.dat");
-	ofstream file_s_u ("../../../results/Euler_2x2_Roe_h-o/shock_raref/s_u.dat");
-	ofstream file_s_tau ("../../../results/Euler_2x2_Roe_h-o/shock_raref/s_tau.dat");
-	ofstream file_t ("../../../results/Euler_2x2_Roe_h-o/shock_raref/t.dat");
+	ofstream file_u ("../../../results/Euler_2x2_Roe_h-o/2_shock/u.dat");
+	ofstream file_tau ("../../../results/Euler_2x2_Roe_h-o/2_shock/tau.dat");
+	ofstream file_s_u ("../../../results/Euler_2x2_Roe_h-o/2_shock/s_u.dat");
+	ofstream file_s_tau ("../../../results/Euler_2x2_Roe_h-o/2_shock/s_tau.dat");
+	ofstream file_t ("../../../results/Euler_2x2_Roe_h-o/2_shock/t.dat");
 	
 	file_u.precision(15);
 	file_tau.precision(15);
@@ -81,7 +81,7 @@ int main()
 		++cont;
 		if(cont%100==0)
 		{
-		//	cout << "t = " << t << endl;
+			cout << "t = " << t << endl;
 		}
 
 		fl.residual(st, R, S);

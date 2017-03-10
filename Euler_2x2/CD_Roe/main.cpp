@@ -12,11 +12,11 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(2e-3), T(0.1), t(0), dt;
+	double xa(0), xb(1), dx(1e-3), T(0.03), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
-	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4), x_c(0.5);//uL(0), uR(2.246510973213954), tauL(0.2), tauR(1), gamma(1.4), x_c(0.5);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);
-	double cfl(0.5);
+	double uL(0), uR(1), tauL(0.2), tauR(0.7), gamma(1.4), x_c(0.5);//uL(0), uR(2.246510973213954), tauL(0.2), tauR(1), gamma(1.4), x_c(0.5);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4), x_c(0.5);
+	double cfl(0.95);
 	
 	vector<double> u0(N, uR);
 	vector<double> tau0(N, tauR);
@@ -52,11 +52,17 @@ int main()
 	flux fl;
 	
 	// printing on file initial data
-	ofstream file_u ("../../../results/Euler_2x2_CD_Roe/shock_raref/u.dat");
+	/*ofstream file_u ("../../../results/Euler_2x2_CD_Roe/shock_raref/u.dat");
 	ofstream file_tau ("../../../results/Euler_2x2_CD_Roe/shock_raref/tau.dat");
 	ofstream file_s_u ("../../../results/Euler_2x2_CD_Roe/shock_raref/s_u.dat");
 	ofstream file_s_tau ("../../../results/Euler_2x2_CD_Roe/shock_raref/s_tau.dat");
-	ofstream file_t ("../../../results/Euler_2x2_CD_Roe/shock_raref/t.dat");
+	ofstream file_t ("../../../results/Euler_2x2_CD_Roe/shock_raref/t.dat");*/
+	
+	ofstream file_u ("results/u.dat");
+	ofstream file_tau ("results/tau.dat");
+	ofstream file_s_u ("results/s_u.dat");
+	ofstream file_s_tau ("results/s_tau.dat");
+	ofstream file_t ("results/t.dat");
 	
 	file_u.precision(15);
 	file_tau.precision(15);
@@ -123,7 +129,7 @@ int main()
 			}
 			double left = max(i-2, 0);
 			double right = min(i+1,N-1);
-			
+			/*
 			if(U[1][i] > U[1][i-1] && U[1][i-1] > U[1][left] && U[1][right] > U[1][i]) //rarefaction
 			{
 				if(U[0][i] < U[0][i-1] && U[0][i-1] < U[0][left] && U[0][right] < U[0][i]) // 2-rarefaction
@@ -137,7 +143,7 @@ int main()
 					s_sigma[i] = -lambda[i];
 				}
 			}
-
+*/
 			x_bar[i] = dx*i + sigma[i]*dt;
 			s_x_bar[i] = dx*i + s_sigma[i]*dt;
 		}

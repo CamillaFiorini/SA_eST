@@ -34,17 +34,17 @@ int main()
 	
 	vector<vector<double> > U, Uold, R;
 
-	godunov st(tau0,u0,s_tau0,s_u0,gamma);
-	//roe_I st1(tau0,u0,s_tau0,s_u0,gamma);
+	//godunov st(tau0,u0,s_tau0,s_u0,gamma);
+	roe_I st(tau0,u0,s_tau0,s_u0,gamma);
 	//roe_II st2(tau0,u0,s_tau0,s_u0,gamma);
 	
 	vector<double> sR;
 	
-	ofstream file_u ("../../../results/Euler_2x2_Godunov/shock_raref/cfl095/u.dat");
-	ofstream file_tau ("../../../results/Euler_2x2_Godunov/shock_raref/cfl095/tau.dat");
-	ofstream file_s_u ("../../../results/Euler_2x2_Godunov/shock_raref/cfl095/s_u.dat");
-	ofstream file_s_tau ("../../../results/Euler_2x2_Godunov/shock_raref/cfl095/s_tau.dat");
-	ofstream file_t ("../../../results/Euler_2x2_Godunov/shock_raref/cfl095/t.dat");
+	ofstream file_u ("../../../results/Euler_2x2_Roe/shock_raref/new_code/u.dat");
+	ofstream file_tau ("../../../results/Euler_2x2_Roe/shock_raref/new_code/tau.dat");
+	ofstream file_s_u ("../../../results/Euler_2x2_Roe/shock_raref/new_code/s_u.dat");
+	ofstream file_s_tau ("../../../results/Euler_2x2_Roe/shock_raref/new_code/s_tau.dat");
+	ofstream file_t ("../../../results/Euler_2x2_Roe/shock_raref/new_code/t.dat");
 	
 	file_u.precision(15);
 	file_tau.precision(15);
@@ -103,7 +103,7 @@ int main()
 		st.set_U(U);
 		t += dt;
 		
-		if (cont%10 == 0 || !first_time)
+		if (cont%1 == 0 || !first_time)
 		{
 			for (int k=0; k<N; ++k)
 			{

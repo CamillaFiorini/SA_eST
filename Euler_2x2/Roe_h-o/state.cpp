@@ -44,7 +44,7 @@ void state::get_UL_extrapolated (vector<double>& UL, int i, double kappa)
 	int Lleft = max(i-2, 0);
 	int right = min(i, N-1);
 	int Rright = min(i+1, N-1);
-	/*
+	
 	vector<double> rL(4), irL(4);
 	
 	for (int k = 0; k < 4; ++k)
@@ -60,7 +60,7 @@ void state::get_UL_extrapolated (vector<double>& UL, int i, double kappa)
 			irL[k] = 1./rL[k];
 		}
 		UL[k] = U[k][left] +( this->psi(rL[k])*(1-kappa)/4*(U[k][left] - U[k][Lleft]) + this->psi(irL[k])*(1+kappa)/4*(U[k][right] - U[k][left]));
-	}*/
+	}/*
 	for (int k = 0; k < 4; ++k)
 	{
 		double a = U[k][right] - U[k][left];
@@ -69,7 +69,7 @@ void state::get_UL_extrapolated (vector<double>& UL, int i, double kappa)
 			UL[k] = U[k][left];
 		else
 			UL[k] = U[k][left] + 0.5*fabs(a)/a*min(fabs(a), fabs(b));
-	}
+	}*/
 	return;
 };
 
@@ -81,7 +81,7 @@ void state::get_UR_extrapolated (vector<double>& UR, int i, double kappa)
 	int Lleft = max(i-2, 0);
 	int right = min(i, N-1);
 	int Rright = min(i+1, N-1);
-	/*
+	
 	vector<double> rR(4), irR(4);
 	
 	for (int k = 0; k < 4; ++k)
@@ -98,7 +98,7 @@ void state::get_UR_extrapolated (vector<double>& UR, int i, double kappa)
 		}
 		UR[k] = U[k][right] +1.*(- this->psi(irR[k])*(1+kappa)/4*(U[k][right] - U[k][left]) - this->psi(rR[k])*(1-kappa)/4*(U[k][Rright] - U[k][right]));
 	}
-	*/
+	/*
 	for (int k = 0; k < 4; ++k)
 	{
 		double a = U[k][Rright] - U[k][right];
@@ -107,7 +107,7 @@ void state::get_UR_extrapolated (vector<double>& UR, int i, double kappa)
 			UR[k] = U[k][right];
 		else
 			UR[k] = U[k][right] - 0.5*fabs(a)/a*min(fabs(a), fabs(b));
-	}
+	}*/
 	return;
 };
 
