@@ -14,16 +14,17 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-2), T(0.03), t(0), dt;
+	double xa(0), xb(1), dx(1e-3), T(0.03), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4);
-	double cfl(0.5);
+	double cfl(0.95);
 	vector<double> u0(N, uR);
 	vector<double> tau0(N, tauR);
 	vector<double> s_u0(N, 0);
 	vector<double> s_tau0(N,0);
-	
+	cout.precision(15);
+
 	for (int k=0; k < N/2; ++k)
 	{
 		u0[k] = uL;
@@ -32,19 +33,21 @@ int main()
 		s_u0[k] = 1;//-9.351212140372281;
 	}
 	
-	vector<vector<double> > U, Uold, R;
+	vector<vector<double> > U, Uold, U_int, R;
 
 	//godunov st(tau0,u0,s_tau0,s_u0,gamma);
-	roe_I st(tau0,u0,s_tau0,s_u0,gamma);
-	//roe_II st2(tau0,u0,s_tau0,s_u0,gamma);
+	//roe_I st(tau0,u0,s_tau0,s_u0,gamma);
+	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
+	bool time_secondorder (true);
+	bool CD (false);
 	
 	vector<double> sR;
 	
-	ofstream file_u ("../../../results/Euler_2x2_Roe/shock_raref/new_code/u.dat");
-	ofstream file_tau ("../../../results/Euler_2x2_Roe/shock_raref/new_code/tau.dat");
-	ofstream file_s_u ("../../../results/Euler_2x2_Roe/shock_raref/new_code/s_u.dat");
-	ofstream file_s_tau ("../../../results/Euler_2x2_Roe/shock_raref/new_code/s_tau.dat");
-	ofstream file_t ("../../../results/Euler_2x2_Roe/shock_raref/new_code/t.dat");
+	ofstream file_u ("../../../results/Euler_2x2_Roe_h-o/shock_raref/new_code/u.dat");
+	ofstream file_tau ("../../../results/Euler_2x2_Roe_h-o/shock_raref/new_code/tau.dat");
+	ofstream file_s_u ("../../../results/Euler_2x2_Roe_h-o/shock_raref/new_code/s_u.dat");
+	ofstream file_s_tau ("../../../results/Euler_2x2_Roe_h-o/shock_raref/new_code/s_tau.dat");
+	ofstream file_t ("../../../results/Euler_2x2_Roe_h-o/shock_raref/new_code/t.dat");
 	
 	file_u.precision(15);
 	file_tau.precision(15);
@@ -67,6 +70,8 @@ int main()
 	
 	st.get_U(Uold);
 	st.get_U(U);
+	st.get_U(U_int);
+	
 	
 	bool first_time (true);
 	int cont(0);
@@ -91,12 +96,24 @@ int main()
 		
 		st.compute_residual(R);
 		
-		for (int i=0; i<N; ++i)
+		if (time_secondorder)
 		{
-			for (int k=0; k<4; ++k)
-			{
-				U[k][i] = Uold[k][i] + dt/dx*R[k][i];
-			}
+			for (int i=0; i<N; ++i)
+				for (int k=0; k<4; ++k)
+					U_int[k][i] = Uold[k][i] + 0.5*dt/dx*R[k][i];
+			
+			st.set_U(U_int);
+			st.compute_residual(R);
+			
+			for (int i=0; i<N; ++i)
+				for (int k=0; k<4; ++k)
+					U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+		}
+		else
+		{
+			for (int i=0; i<N; ++i)
+				for (int k=0; k<4; ++k)
+					U[k][i] = Uold[k][i] + dt/dx*R[k][i];
 		}
 		
 		Uold = U;
