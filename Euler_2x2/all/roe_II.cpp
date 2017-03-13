@@ -101,7 +101,6 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 		
 		lambda = this->compute_lambda(UL, UR);
 		this->compute_U_star(UL, UR, Ustar);
-		
 		for (int k=0; k<4; ++k)
 		{
 			if (i < N)

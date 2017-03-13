@@ -34,14 +34,18 @@ int main()
 	}
 	
 	vector<vector<double> > U, Uold, U_int, R;
-
-	//godunov st(tau0,u0,s_tau0,s_u0,gamma);
-	//roe_I st(tau0,u0,s_tau0,s_u0,gamma);
+	
+	/***** CD *****/
+	vector<double> x_bar(N+1,0), sigma(N+1,0);
+	x_bar[0] = xa; x_bar[N] = xb;
+	vector<vector<double> > U_bar(4, u0);
+	/**************/
+	
 	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
 	bool time_secondorder (true);
 	bool CD (false);
 	
-	vector<double> sR;
+	vector<double> lambda;
 	
 	ofstream file_u ("../../../results/Euler_2x2_Roe_h-o/shock_raref/new_code/u.dat");
 	ofstream file_tau ("../../../results/Euler_2x2_Roe_h-o/shock_raref/new_code/tau.dat");
@@ -85,8 +89,8 @@ int main()
 		}
 		
 		/*** dt computation ***/
-		st.compute_lambda(sR);
-		dt = dx*cfl/(*max_element(sR.begin(),sR.end()));
+		st.compute_lambda(lambda);
+		dt = dx*cfl/(*max_element(lambda.begin(),lambda.end()));
 		if(first_time && (t+dt)>T)
 		{
 			dt = T-t;
@@ -94,26 +98,62 @@ int main()
 		}
 		/**********************/
 		
-		st.compute_residual(R);
-		
 		if (time_secondorder)
 		{
-			for (int i=0; i<N; ++i)
-				for (int k=0; k<4; ++k)
-					U_int[k][i] = Uold[k][i] + 0.5*dt/dx*R[k][i];
-			
-			st.set_U(U_int);
-			st.compute_residual(R);
-			
-			for (int i=0; i<N; ++i)
-				for (int k=0; k<4; ++k)
-					U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+			if (CD)
+			{
+			}
+			else
+			{
+				st.compute_residual(R);
+				for (int i=0; i<N; ++i)
+					for (int k=0; k<4; ++k)
+						U_int[k][i] = Uold[k][i] + 0.5*dt/dx*R[k][i];
+				
+				st.set_U(U_int);
+				st.compute_residual(R);
+				
+				for (int i=0; i<N; ++i)
+					for (int k=0; k<4; ++k)
+						U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+			}
 		}
 		else
 		{
-			for (int i=0; i<N; ++i)
-				for (int k=0; k<4; ++k)
-					U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+			if(CD)
+			{
+				/** staggered grid definition **/
+				sigma.assign(N+1,0);
+				for (int i = 1; i < N; ++i)
+				{
+					if(U[1][i] < U[1][i-1]) // shock
+					{
+						if(U[0][i] < U[0][i-1]) //1-shock
+						{
+							sigma[i] = -lambda[i];
+						}
+						if(U[0][i] > U[0][i-1]) //2-shock
+						{
+							sigma[i] = lambda[i];
+						}
+					}
+					x_bar[i] = dx*i + sigma[i]*dt;
+				}
+				/********************************/
+				
+				
+				
+			}
+			else
+			{
+				for (int i=0; i<N; ++i)
+				{
+					for (int k=0; k<4; ++k)
+					{
+						U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+					}
+				}
+			}
 		}
 		
 		Uold = U;
@@ -137,4 +177,48 @@ int main()
 		}
 	}
 	return 0;
+}
+
+
+// CD functions
+void cmax(const int & n, int & maxa)
+{
+	for (int k = 0; k < 31; k++)
+	{
+		if ( (n - pow(2.,k)) >= 0 )
+			maxa = k;
+	}
+}
+
+void cbin(const int & n, int bin[])
+{
+	for (int i = 0; i < 31; i++) bin[i] = 0;
+
+	int maxa = 0, nup = n;
+	cmax(nup, maxa);
+
+	for (int i = 0; i < 31; i++)
+	{
+		if ( (nup > 0) || (nup < 0) )
+		{
+			cmax(nup,maxa);
+			bin[maxa] = 1;
+			nup = nup - int(pow(2.,maxa));
+		}
+	}
+}
+
+void can(const int & n, double & an)
+{
+	int bin[31];
+
+	an = 0.;
+	for (int i = 0; i < 31; i++) bin[i] = 0;
+
+	cbin(n,bin);
+
+	for (int k = 0; k < 31; k++)
+	{
+		an = an + bin[k]*(pow(2.,0 - k - 1));
+	}
 }
