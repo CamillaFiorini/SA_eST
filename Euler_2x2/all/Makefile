@@ -1,8 +1,8 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall
 
-main: main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o
-	$(CXX) $(CXXFLAGS) -o main main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o
+main: main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o
+	$(CXX) $(CXXFLAGS) -o main main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o
 
 mesh.o: mesh.hpp mesh.cpp
 	$(CXX) $(CXXFLAGS) -c mesh.cpp
@@ -21,6 +21,9 @@ roe_I.o: roe_I.hpp roe_I.cpp roe.o
 
 state.o: state.hpp state.cpp
 	$(CXX) $(CXXFLAGS) -c state.cpp
+
+utilities.o: utilities.hpp utilities.cpp
+	$(CXX) $(CXXFLAGS) -c utilities.cpp
 
 clean:
 	$(RM) *.o

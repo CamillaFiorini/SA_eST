@@ -9,6 +9,7 @@
 #include"roe.hpp"
 #include"roe_I.hpp"
 #include"roe_II.hpp"
+#include"utilities.hpp"
 
 using namespace std;
 
@@ -38,12 +39,12 @@ int main()
 	/***** CD *****/
 	vector<double> x_bar(N+1,0), sigma(N+1,0);
 	x_bar[0] = xa; x_bar[N] = xb;
-	vector<vector<double> > U_bar(4, u0);
+	vector<vector<double> > U_bar(4, u0), Ustar(4, u0);
 	/**************/
 	
-	godunov st(tau0,u0,s_tau0,s_u0,gamma);
+	roe_I st(tau0,u0,s_tau0,s_u0,gamma);
 	bool time_secondorder (false);
-	bool CD (false);
+	bool CD (true);
 	
 	vector<double> lambda;
 	
@@ -102,6 +103,8 @@ int main()
 		{
 			if (CD)
 			{
+				st.compute_U_star(Ustar);
+
 			}
 			else
 			{
@@ -122,6 +125,7 @@ int main()
 		{
 			if(CD)
 			{
+				st.compute_U_star(Ustar);
 				/** staggered grid definition **/
 				sigma.assign(N+1,0);
 				for (int i = 1; i < N; ++i)
@@ -141,8 +145,40 @@ int main()
 				}
 				/********************************/
 				
+				/********* compute U_bar ********/
+				for (int i=0; i<N; ++i)
+				{
+					double dxi = (x_bar[i+1]-x_bar[i]);
+					for (int k = 0; k < 4; ++k)
+					{
+						U_bar[k][i] = dx/dxi*Uold[k][i] + dt/dxi*( (-lambda[i+1]-lambda[i])*Uold[k][i] + (sigma[i+1]+lambda[i+1])*Ustar[k][i+1] + (lambda[i]-sigma[i])*Ustar[k][i] );
+					}
+				}
+				/********************************/
 				
+				/*********** sampling ***********/
+				double an;
+				can(cont, an);
 				
+				for (int i=0; i<N; ++i)
+				{
+					for (int k=0; k<4; ++k)
+					{
+						if (an < dt/dx*max(0.0, sigma[i]))
+						{
+							U[k][i] = U_bar[k][i-1];
+						}
+						if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
+						{
+							U[k][i] = U_bar[k][i];
+						}
+						if (an > 1+dt/dx*min(0.0, sigma[i+1]))
+						{
+							U[k][i] = U_bar[k][i+1];
+						}
+					}
+				}
+				/********************************/
 			}
 			else
 			{
@@ -178,48 +214,4 @@ int main()
 		}
 	}
 	return 0;
-}
-
-
-// CD functions
-void cmax(const int & n, int & maxa)
-{
-	for (int k = 0; k < 31; k++)
-	{
-		if ( (n - pow(2.,k)) >= 0 )
-			maxa = k;
-	}
-}
-
-void cbin(const int & n, int bin[])
-{
-	for (int i = 0; i < 31; i++) bin[i] = 0;
-
-	int maxa = 0, nup = n;
-	cmax(nup, maxa);
-
-	for (int i = 0; i < 31; i++)
-	{
-		if ( (nup > 0) || (nup < 0) )
-		{
-			cmax(nup,maxa);
-			bin[maxa] = 1;
-			nup = nup - int(pow(2.,maxa));
-		}
-	}
-}
-
-void can(const int & n, double & an)
-{
-	int bin[31];
-
-	an = 0.;
-	for (int i = 0; i < 31; i++) bin[i] = 0;
-
-	cbin(n,bin);
-
-	for (int k = 0; k < 31; k++)
-	{
-		an = an + bin[k]*(pow(2.,0 - k - 1));
-	}
 }
