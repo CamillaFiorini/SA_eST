@@ -15,6 +15,31 @@ void godunov::compute_lambda(vector<double>& l) const
 	}
 	return;
 };
+
+void godunov::compute_U_star(vector<vector<double> >& Ustar) const
+{
+	int N = U[0].size();
+	Ustar.resize(4);
+	for (int k = 0; k < 4; ++k)
+	{
+		Ustar[k].resize(N+1);
+	}
+	vector<double> UL, UR;
+
+	for (int i = 0; i <= N; ++i)
+	{
+		int left = max(0,i-1);
+		int right = min(i, N-1);
+		this->get_U(UL, left);
+		this->get_U(UR, right);
+		vector<double> temp;
+		this->compute_U_star(UL, UR, temp);
+		for (int k = 0; k < 4; ++k)
+			Ustar[k][i] = temp[k];
+	}
+	return;
+};
+
 void godunov::compute_U_star(const vector<double>& UL, const vector<double>& UR, vector<double>& Ustar) const
 {
 	double tauL = UL[0];
@@ -46,16 +71,16 @@ void godunov::compute_residual(vector<vector<double> >& R) const
 	int N = this->get_size();
 	for (int k = 0; k < 4; ++k)
 		R[k].assign(N,0);
-	
+		
  	for (int i = 0; i <= N; ++i)
 	{
 		int left = max(0,i-1);
 		int right = min(i, N-1);
-		vector<double> UL, UR, Ustar;
+		vector<double> UL, UR, Ustar(4);
 		this->get_U(UL, left);
 		this->get_U(UR, right);
 		this->compute_U_star(UL, UR, Ustar);
-		
+
 		double k1(0), k2(0);
 		if(i > 0)
 		{

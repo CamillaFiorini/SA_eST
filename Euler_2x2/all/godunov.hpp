@@ -15,6 +15,7 @@ public:
 	// Methods
 	void compute_lambda(vector<double>&) const;
 	void compute_U_star(const vector<double>&, const vector<double>&, vector<double>&) const;
+	void compute_U_star(vector<vector<double> >&) const;
 	void compute_residual(vector<vector<double> >&) const;
 	
 	//Functions that shouldn't be methods but I'm lazy

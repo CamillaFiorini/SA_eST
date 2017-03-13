@@ -14,7 +14,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-3), T(0.03), t(0), dt;
+	double xa(0), xb(1), dx(1e-2), T(0.03), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4);
@@ -41,8 +41,8 @@ int main()
 	vector<vector<double> > U_bar(4, u0);
 	/**************/
 	
-	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
-	bool time_secondorder (true);
+	godunov st(tau0,u0,s_tau0,s_u0,gamma);
+	bool time_secondorder (false);
 	bool CD (false);
 	
 	vector<double> lambda;
@@ -146,6 +146,7 @@ int main()
 			}
 			else
 			{
+				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
 				{
 					for (int k=0; k<4; ++k)
