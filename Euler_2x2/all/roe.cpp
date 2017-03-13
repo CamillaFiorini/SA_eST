@@ -9,11 +9,7 @@ void roe::compute_lambda(vector<double>& l) const
 	{
 		this->get_UL_extrapolated(UL, i);
 		this->get_UR_extrapolated(UR, i);
-		double tauL (UL[0]), tauR(UR[0]);
-		if(fabs(tauL-tauR) < 1e-15)
-			l[i] = sqrt( gamma*pow(tauL, -gamma-1) );
-		else
-			l[i] = sqrt( -(pow(tauL, -gamma) - pow(tauR, -gamma)) / (tauL-tauR) );
+		l[i] = this->compute_lambda(UL, UR);
 	}
 	return;
 };
