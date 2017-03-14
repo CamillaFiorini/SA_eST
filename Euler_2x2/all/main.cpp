@@ -39,7 +39,7 @@ int main()
 	/***** CD *****/
 	vector<double> x_bar(N+1,0), sigma(N+1,0);
 	x_bar[0] = xa; x_bar[N] = xb;
-	vector<vector<double> > U_bar(4, u0), Ustar(4, u0);
+	vector<vector<double> > U_bar(4, u0);
 	/**************/
 	
 	roe_I st(tau0,u0,s_tau0,s_u0,gamma);

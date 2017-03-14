@@ -16,30 +16,6 @@ void godunov::compute_lambda(vector<double>& l) const
 	return;
 };
 
-void godunov::compute_U_star(vector<vector<double> >& Ustar) const
-{
-	int N = U[0].size();
-	Ustar.resize(4);
-	for (int k = 0; k < 4; ++k)
-	{
-		Ustar[k].resize(N+1);
-	}
-	vector<double> UL, UR;
-
-	for (int i = 0; i <= N; ++i)
-	{
-		int left = max(0,i-1);
-		int right = min(i, N-1);
-		this->get_U(UL, left);
-		this->get_U(UR, right);
-		vector<double> temp;
-		this->compute_U_star(UL, UR, temp);
-		for (int k = 0; k < 4; ++k)
-			Ustar[k][i] = temp[k];
-	}
-	return;
-};
-
 void godunov::compute_U_star(const vector<double>& UL, const vector<double>& UR, vector<double>& Ustar) const
 {
 	double tauL = UL[0];

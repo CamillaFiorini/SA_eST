@@ -22,7 +22,5 @@ public:
 	void compute_state_star(const vector<double>&, const vector<double>&, vector<double>&) const;
 	virtual void get_UL_extrapolated (vector<double>&, int) const = 0;
 	virtual void get_UR_extrapolated (vector<double>&, int) const = 0;
-	void compute_U_star(vector<vector<double> >&) const;
-
 };
 #endif

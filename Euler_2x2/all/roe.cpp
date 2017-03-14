@@ -14,26 +14,6 @@ void roe::compute_lambda(vector<double>& l) const
 	return;
 };
 
-void roe::compute_U_star(vector<vector<double> >& Ustar) const
-{
-	Ustar.resize(4);
-	int N = U[0].size();
-	for (int k = 0; k < 4; ++k)
-		Ustar[k].resize(N+1);
-	
-	vector<double> UL, UR;
-	for (int i = 0; i <= N; ++i)
-	{
-		this->get_UL_extrapolated(UL, i);
-		this->get_UR_extrapolated(UR, i);
-		vector<double> temp;
-		this->compute_U_star(UL, UR, temp);
-		for (int k = 0; k < 4; ++k)
-			Ustar[k][i] = temp[k];
-	}
-	return;
-};
-
 double roe::compute_lambda(const vector<double>& UL, const vector<double>& UR) const
 {
 	if(fabs(UL[0]-UR[0]) < 1e-15)
