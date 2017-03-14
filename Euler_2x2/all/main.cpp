@@ -42,8 +42,8 @@ int main()
 	vector<vector<double> > U_bar(4, u0), Ustar(4, u0);
 	/**************/
 	
-	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
-	bool time_secondorder (true);
+	roe_I st(tau0,u0,s_tau0,s_u0,gamma);
+	bool time_secondorder (false);
 	bool CD (true);
 	st.set_CD(CD);
 	vector<double> lambda;
@@ -125,9 +125,7 @@ int main()
 				{
 					double dxi = (x_bar[i+1]-x_bar[i]);
 					for (int k = 0; k < 4; ++k)
-					{
 						U_bar[k][i] = dx/dxi*Uold[k][i] + 0.5*dt/dxi*R[k][i];
-					}
 				}
 				/********************************/
 				
@@ -142,9 +140,7 @@ int main()
 				{
 					double dxi = (x_bar[i+1]-x_bar[i]);
 					for (int k = 0; k < 4; ++k)
-					{
 						U_int[k][i] = dx/dxi*Uold[k][i] + dt/dxi*R[k][i];
-					}
 				}
 				/********************************/
 
@@ -157,17 +153,14 @@ int main()
 					for (int k=0; k<4; ++k)
 					{
 						if (an < dt/dx*max(0.0, sigma[i]))
-						{
 							U[k][i] = U_int[k][i-1];
-						}
+
 						if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
-						{
 							U[k][i] = U_int[k][i];
-						}
+						
 						if (an > 1+dt/dx*min(0.0, sigma[i+1]))
-						{
 							U[k][i] = U_int[k][i+1];
-						}
+
 					}
 				}
 				/********************************/
@@ -190,7 +183,6 @@ int main()
 		{
 			if(CD)
 			{
-				st.compute_U_star(Ustar);
 				/** staggered grid definition **/
 				sigma.assign(N+1,0);
 				for (int i = 1; i < N; ++i)
@@ -198,26 +190,23 @@ int main()
 					if(U[1][i] < U[1][i-1]) // shock
 					{
 						if(U[0][i] < U[0][i-1]) //1-shock
-						{
 							sigma[i] = -lambda[i];
-						}
+
 						if(U[0][i] > U[0][i-1]) //2-shock
-						{
 							sigma[i] = lambda[i];
-						}
+
 					}
 					x_bar[i] = dx*i + sigma[i]*dt;
 				}
 				/********************************/
-				
+				st.set_sigma(sigma);
+				st.compute_residual(R);
 				/********* compute U_bar ********/
 				for (int i=0; i<N; ++i)
 				{
 					double dxi = (x_bar[i+1]-x_bar[i]);
 					for (int k = 0; k < 4; ++k)
-					{
-						U_bar[k][i] = dx/dxi*Uold[k][i] + dt/dxi*( (-lambda[i+1]-lambda[i])*Uold[k][i] + (sigma[i+1]+lambda[i+1])*Ustar[k][i+1] + (lambda[i]-sigma[i])*Ustar[k][i] );
-					}
+						U_bar[k][i] = dx/dxi*Uold[k][i] + dt/dxi*R[k][i];
 				}
 				/********************************/
 				
@@ -230,17 +219,14 @@ int main()
 					for (int k=0; k<4; ++k)
 					{
 						if (an < dt/dx*max(0.0, sigma[i]))
-						{
 							U[k][i] = U_bar[k][i-1];
-						}
+
 						if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
-						{
 							U[k][i] = U_bar[k][i];
-						}
+
 						if (an > 1+dt/dx*min(0.0, sigma[i+1]))
-						{
 							U[k][i] = U_bar[k][i+1];
-						}
+
 					}
 				}
 				/********************************/

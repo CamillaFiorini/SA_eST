@@ -41,16 +41,28 @@ void roe_I::compute_residual(vector<vector<double> >& R) const
 		double lambda = this->compute_lambda(UL, UR);
 		
 		this->compute_U_star(UL, UR, Ustar);
-		
-		for (int k=0; k<4; ++k)
+		if (CD)
 		{
-			if (i < N)
-				R[k][i] += lambda*(Ustar[k]-UR[k]);
-			
-			if (i > 0)
-				R[k][i-1] += lambda*(Ustar[k]-UL[k]);
+			for (int k=0; k<4; ++k)
+			{
+				if (i < N)
+					R[k][i] += lambda*(Ustar[k]-UR[k]) - sigma[i]*Ustar[k];
+				
+				if (i > 0)
+					R[k][i-1] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+			}
 		}
-		
+		else
+		{
+			for (int k=0; k<4; ++k)
+			{
+				if (i < N)
+					R[k][i] += lambda*(Ustar[k]-UR[k]);
+				
+				if (i > 0)
+					R[k][i-1] += lambda*(Ustar[k]-UL[k]);
+			}
+		}
 	}
 	return;
 };
