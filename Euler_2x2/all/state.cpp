@@ -1,6 +1,6 @@
 #include"state.hpp"
 
-state::state(vector<double> tau, vector<double> u, vector<double> s_tau, vector<double> s_u, double g)
+state::state(vector<double> tau, vector<double> u, vector<double> s_tau, vector<double> s_u, double g, bool c)
 {
 	U.resize(4);
 	U[0] = tau;
@@ -8,6 +8,7 @@ state::state(vector<double> tau, vector<double> u, vector<double> s_tau, vector<
 	U[2] = s_tau;
 	U[3] = s_u;
 	gamma = g;
+	CD = c;
 };
 
 void state::get_U(vector<double>& u, int i) const

@@ -19,7 +19,7 @@ int main()
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4);
-	double cfl(0.95);
+	double cfl(0.5);
 	vector<double> u0(N, uR);
 	vector<double> tau0(N, tauR);
 	vector<double> s_u0(N, 0);
@@ -42,10 +42,10 @@ int main()
 	vector<vector<double> > U_bar(4, u0), Ustar(4, u0);
 	/**************/
 	
-	roe_I st(tau0,u0,s_tau0,s_u0,gamma);
-	bool time_secondorder (false);
+	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
+	bool time_secondorder (true);
 	bool CD (true);
-	
+	st.set_CD(CD);
 	vector<double> lambda;
 	
 	ofstream file_u ("../../../results/Euler_2x2_Roe_h-o/shock_raref/new_code/u.dat");
@@ -84,7 +84,7 @@ int main()
 	while (t < T)
 	{
 		++cont;
-		if(cont%100==0)
+		if(cont%10==0)
 		{
 			cout << "t = " << t << endl;
 		}
@@ -103,8 +103,74 @@ int main()
 		{
 			if (CD)
 			{
-				st.compute_U_star(Ustar);
+				/** staggered grid definition **/
+				sigma.assign(N+1,0);
+				for (int i = 1; i < N; ++i)
+				{
+					if(U[1][i] < U[1][i-1]) // shock
+					{
+						if(U[0][i] < U[0][i-1] ) //1-shock
+							sigma[i] = -lambda[i];
+						if(U[0][i] > U[0][i-1]) //2-shock
+							sigma[i] = lambda[i];
+					}
+					x_bar[i] = dx*i + sigma[i]*0.5*dt;
+				}
+				/********************************/
+				st.set_sigma(sigma);
+				st.compute_residual(R);
 
+				/********* compute U_bar ********/
+				for (int i=0; i<N; ++i)
+				{
+					double dxi = (x_bar[i+1]-x_bar[i]);
+					for (int k = 0; k < 4; ++k)
+					{
+						U_bar[k][i] = dx/dxi*Uold[k][i] + 0.5*dt/dxi*R[k][i];
+					}
+				}
+				/********************************/
+				
+				/********* compute U_int ********/
+				st.set_U(U_bar);
+				st.compute_residual(R);
+				
+				for (int i=0; i<N; ++i)
+					x_bar[i] = dx*i + sigma[i]*dt;
+				
+				for (int i=0; i<N; ++i)
+				{
+					double dxi = (x_bar[i+1]-x_bar[i]);
+					for (int k = 0; k < 4; ++k)
+					{
+						U_int[k][i] = dx/dxi*Uold[k][i] + dt/dxi*R[k][i];
+					}
+				}
+				/********************************/
+
+				/*********** sampling ***********/
+				double an;
+				can(cont, an);
+				
+				for (int i=0; i<N; ++i)
+				{
+					for (int k=0; k<4; ++k)
+					{
+						if (an < dt/dx*max(0.0, sigma[i]))
+						{
+							U[k][i] = U_int[k][i-1];
+						}
+						if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
+						{
+							U[k][i] = U_int[k][i];
+						}
+						if (an > 1+dt/dx*min(0.0, sigma[i+1]))
+						{
+							U[k][i] = U_int[k][i+1];
+						}
+					}
+				}
+				/********************************/
 			}
 			else
 			{
@@ -115,7 +181,6 @@ int main()
 				
 				st.set_U(U_int);
 				st.compute_residual(R);
-				
 				for (int i=0; i<N; ++i)
 					for (int k=0; k<4; ++k)
 						U[k][i] = Uold[k][i] + dt/dx*R[k][i];
@@ -184,12 +249,8 @@ int main()
 			{
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
-				{
 					for (int k=0; k<4; ++k)
-					{
 						U[k][i] = Uold[k][i] + dt/dx*R[k][i];
-					}
-				}
 			}
 		}
 		

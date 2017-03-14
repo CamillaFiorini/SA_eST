@@ -12,11 +12,13 @@ class state
 protected:
 	double gamma;
 	vector<vector<double> > U;
+	bool CD;
+	vector<double> sigma;
 public:
 	// Constructors
 	state()=default;
-	state(vector<vector<double> > u, double g) : gamma(g), U(u) {};
-	state(vector<double>, vector<double>, vector<double>, vector<double>, double);
+	state(vector<vector<double> > u, double g) : gamma(g), U(u), CD(false) {};
+	state(vector<double>, vector<double>, vector<double>, vector<double>, double, bool=false);
 	// ToutDoux! Destructor
 	//virtual ~state() = default;
 	
@@ -27,7 +29,10 @@ public:
 	void get_U(vector<double>& u, int i) const;
 	inline void set_gamma(const double g) {gamma = g; return;};
 	inline double get_gamma() const {return gamma;};
-	
+	inline void set_CD(const bool c) {CD=c;};
+	inline bool get_CD() const {return CD;};
+	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
+	inline void get_sigma(vector<double>& s) {s = sigma;};
 	// Methods
 	virtual void compute_U_star(const vector<double>&, const vector<double>&, vector<double>&) const = 0;
 	virtual void compute_residual(vector<vector<double> >&) const = 0;
