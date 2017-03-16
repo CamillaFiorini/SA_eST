@@ -4,6 +4,7 @@
 #include<vector>
 #include<cmath>
 #include<iostream>
+#include<omp.h>
 
 using namespace std;
 
@@ -19,8 +20,7 @@ public:
 	state()=default;
 	state(vector<vector<double> > u, double g) : gamma(g), U(u), CD(false) {};
 	state(vector<double>, vector<double>, vector<double>, vector<double>, double, bool=false);
-	// ToutDoux! Destructor
-	//virtual ~state() = default;
+	virtual ~state() = default;
 	
 	// Set and get members
 	inline int get_size() const {return U[0].size();};

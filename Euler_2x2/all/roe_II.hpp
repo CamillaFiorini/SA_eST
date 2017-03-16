@@ -3,6 +3,7 @@
 
 #include<vector>
 #include"roe.hpp"
+#include"utilities.hpp"
 
 using namespace std;
 
@@ -14,6 +15,7 @@ public:
 	// Constructors
 	roe_II(vector<vector<double> > u, double g) : roe(u,g), kappa(1./3.) {};
 	roe_II(vector<double>a, vector<double>b, vector<double>c, vector<double>d, double e) : roe(a,b,c,d,e), kappa(1./3.) {};
+	~roe_II() = default;
 	// Methods
 	void set_k(double k) {kappa=k;};
 	double psi(double) const;
