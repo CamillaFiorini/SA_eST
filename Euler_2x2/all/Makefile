@@ -1,5 +1,5 @@
-CXX = g++
-CXXFLAGS = -std=c++11 -Wall
+CXX = g++-6
+CXXFLAGS = -std=c++11 -Wall -fopenmp
 
 main: main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o
 	$(CXX) $(CXXFLAGS) -o main main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o

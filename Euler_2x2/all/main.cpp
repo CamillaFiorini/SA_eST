@@ -3,6 +3,7 @@
 #include<vector>
 #include<algorithm>
 #include<iomanip>
+#include<chrono>
 #include"mesh.hpp"
 #include"state.hpp"
 #include"godunov.hpp"
@@ -15,7 +16,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-2), T(0.03), t(0), dt;
+	double xa(0), xb(1), dx(1e-3), T(0.03), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4);
@@ -42,9 +43,9 @@ int main()
 	vector<vector<double> > U_bar(4, u0);
 	/**************/
 	
-	roe_I st(tau0,u0,s_tau0,s_u0,gamma);
-	bool time_secondorder (false);
-	bool CD (true);
+	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
+	bool time_secondorder (true);
+	bool CD (false);
 	st.set_CD(CD);
 	vector<double> lambda;
 	
@@ -77,10 +78,12 @@ int main()
 	st.get_U(U);
 	st.get_U(U_int);
 	
-	
 	bool first_time (true);
 	int cont(0);
 	// time loop
+	
+	auto timeSTART=chrono::system_clock::now();
+
 	while (t < T)
 	{
 		++cont;
@@ -169,9 +172,12 @@ int main()
 			{
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
+				{
 					for (int k=0; k<4; ++k)
 						U_int[k][i] = Uold[k][i] + 0.5*dt/dx*R[k][i];
-				
+					//cout << i << " " << R[0][i] << "\n";
+				}
+				//cout << "\nsecondo mezzo time step\n";
 				st.set_U(U_int);
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
@@ -260,5 +266,9 @@ int main()
 			file_t << t << endl;
 		}
 	}
+	
+	auto timeEND=chrono::system_clock::now();
+	auto delta=chrono::duration_cast<chrono::milliseconds>(timeEND-timeSTART);
+	cout << delta.count() << endl;
 	return 0;
 }

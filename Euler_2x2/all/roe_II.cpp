@@ -91,51 +91,64 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 	for (int k = 0; k < 4; ++k)
 		R[k].assign(N,0);
 	
-	vector<double> UL(4), UR(4), Ustar(4), UL_cell(4), UR_cell(4), Ustar_cell(4);
-	double lambda, lambda_cell;
-
-	for (int i = 0; i <= N; ++i)
+	#pragma omp parallel default(shared)
 	{
-		this->get_UL_extrapolated(UL, i);
-		this->get_UR_extrapolated(UR, i);
+		int nt = omp_get_num_threads();
+		int tid = omp_get_thread_num();
+		int ChunkSize = N/nt;
+		int CS = ChunkSize;
+		if (tid == nt-1)
+			ChunkSize = N/nt + N%nt;
 		
-		lambda = this->compute_lambda(UL, UR);
-		this->compute_U_star(UL, UR, Ustar);
-		if (CD)
-		{
-			for (int k=0; k<4; ++k)
-			{
-				if (i < N)
-					R[k][i] += lambda*(Ustar[k]-UR[k]) - sigma[i]*Ustar[k];
-				
-				if (i > 0)
-					R[k][i-1] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
-			}
-		}
-		else
-		{
-			for (int k=0; k<4; ++k)
-			{
-				if (i < N)
-					R[k][i] += lambda*(Ustar[k]-UR[k]);
-				
-				if (i > 0)
-					R[k][i-1] += lambda*(Ustar[k]-UL[k]);
-			}
-		}
-		if(i > 0)
-		{
-			UR_cell = UL;
-			this->compute_U_star(UL_cell, UR_cell, Ustar_cell);
-			lambda_cell = this->compute_lambda(UL_cell, UR_cell);
-			for (int k = 0; k < 4; ++k)
-				R[k][i-1] += lambda_cell*(2*Ustar_cell[k] - UL_cell[k] - UR_cell[k]);
-		}
-	
-		UL_cell = UR;
+		vector<double> UL(4), UR(4), Ustar(4), UL_cell(4), UR_cell(4), Ustar_cell(4);
+		double lambda, lambda_cell;
 		
+		if(tid != 0)
+			this->get_UR_extrapolated(UL_cell, tid*CS-1);
+
+		for (int ip = 0; ip < ChunkSize; ++ip)
+		{
+			int i = ip + tid*CS;
+			this->get_UL_extrapolated(UL, i);
+			this->get_UR_extrapolated(UR, i);
+			
+			lambda = this->compute_lambda(UL, UR);
+			this->compute_U_star(UL, UR, Ustar);
+
+			if (CD)
+			{
+				for (int k=0; k<4; ++k)
+				{
+					if (i < N)
+						R[k][i] += lambda*(Ustar[k]-UR[k]) - sigma[i]*Ustar[k];
+					
+					if (i > 0)
+						R[k][i-1] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+				}
+			}
+			else
+			{
+				for (int k=0; k<4; ++k)
+				{
+					if (i < N)
+						R[k][i] += lambda*(Ustar[k]-UR[k]);
+					
+					if (i > 0)
+						R[k][i-1] += lambda*(Ustar[k]-UL[k]);
+				}
+			}
+
+			if(i > 0)
+			{
+				UR_cell = UL;
+				this->compute_U_star(UL_cell, UR_cell, Ustar_cell);
+				lambda_cell = this->compute_lambda(UL_cell, UR_cell);
+				for (int k = 0; k < 4; ++k)
+					R[k][i-1] += lambda_cell*(2*Ustar_cell[k] - UL_cell[k] - UR_cell[k]);
+			}
+			UL_cell = UR;
+		}
 	}
-	
 	//cout << 49 << "\t" << R[0][49] << endl << 50 << "\t" << R[0][50] << endl << 51 << "\t" << R[0][51] << endl;
 	
 	
