@@ -43,9 +43,9 @@ int main()
 	vector<vector<double> > U_bar(4, u0);
 	/**************/
 	
-	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
-	bool time_secondorder (true);
-	bool CD (true);
+	godunov st(tau0,u0,s_tau0,s_u0,gamma);
+	bool time_secondorder (false);
+	bool CD (false);
 	st.set_CD(CD);
 	vector<double> lambda;
 	
@@ -87,7 +87,7 @@ int main()
 	while (t < T)
 	{
 		++cont;
-		if(cont%10==0)
+		if(cont%100==0)
 		{
 			cout << "t = " << t << endl;
 		}
@@ -269,6 +269,8 @@ int main()
 	
 	auto timeEND=chrono::system_clock::now();
 	auto delta=chrono::duration_cast<chrono::milliseconds>(timeEND-timeSTART);
-	cout << delta.count() << endl;
+	int sec((delta.count())/1000);
+	int msec((delta.count()-sec*1000));
+	cout << sec << "s " << msec << endl;
 	return 0;
 }

@@ -47,47 +47,71 @@ void godunov::compute_residual(vector<vector<double> >& R) const
 	int N = this->get_size();
 	for (int k = 0; k < 4; ++k)
 		R[k].assign(N,0);
-		
- 	for (int i = 0; i <= N; ++i)
-	{
-		int left = max(0,i-1);
-		int right = min(i, N-1);
-		vector<double> UL, UR, Ustar(4);
-		this->get_U(UL, left);
-		this->get_U(UR, right);
-		this->compute_U_star(UL, UR, Ustar);
-
-		double k1(0), k2(0);
-		if(i > 0)
-		{
-			if( (Ustar[0]-UL[0] < -1e-15) && (Ustar[1] - UL[1] < -1e-15) ) // if 1-shock
-				k1 = (Ustar[1] - UL[1])/(UL[0] - Ustar[0]);
-			if ( (Ustar[0]-UL[0] > 1e-15) && (Ustar[1] - UL[1] > 1e-15) ) // if 1-raref
-				k1 = -sqrt(gamma*pow(Ustar[0], -gamma-1));
-		}
-		if (i < N)
-		{
-			if( (Ustar[0]-UR[0] < -1e-15) && (Ustar[1] - UR[1] > 1e-15) ) // if 2-shock
-				k2 = (Ustar[1] - UR[1])/(UR[0] - Ustar[0]);
-			if( (Ustar[0]-UR[0] > 1e-15) && (Ustar[1] - UR[1] < -1e-15) ) // if 2-raref
-				k2 = sqrt(gamma*pow(Ustar[0], -gamma-1));
-		}
-		if (i < N)
-		{
-			R[0][i] += -Ustar[1];
-			R[1][i] += pow(Ustar[0], -gamma);
-			R[2][i] += k2*(Ustar[2] - UR[2]);
-			R[3][i] += k2*(Ustar[3] - UR[3]);
-		}
-		if (i > 0)
-		{
-			R[0][i-1] -= -Ustar[1];
-			R[1][i-1] -= pow(Ustar[0], -gamma);
-			R[2][i-1] -= k1*(Ustar[2] - UL[2]);
-			R[3][i-1] -= k1*(Ustar[3] - UL[3]);
-		}
-	}
 	
+	#pragma omp parallel default(shared)
+	{
+		int nt = omp_get_num_threads();
+		int tid = omp_get_thread_num();
+		int ChunkSize = N/nt;
+		int CS = ChunkSize;
+		if (tid == nt-1)
+			ChunkSize = N/nt + N%nt + 1;
+		vector<double> to_add(4, 0);
+		
+		for (int ip = 0; ip < ChunkSize; ++ip)
+		{
+			int i = ip + tid*CS;
+			int left = max(0,i-1);
+			int right = min(i, N-1);
+			vector<double> UL, UR, Ustar(4);
+			this->get_U(UL, left);
+			this->get_U(UR, right);
+			this->compute_U_star(UL, UR, Ustar);
+
+			double k1(0), k2(0);
+			if(i > 0)
+			{
+				if( (Ustar[0]-UL[0] < -1e-15) && (Ustar[1] - UL[1] < -1e-15) ) // if 1-shock
+					k1 = (Ustar[1] - UL[1])/(UL[0] - Ustar[0]);
+				if ( (Ustar[0]-UL[0] > 1e-15) && (Ustar[1] - UL[1] > 1e-15) ) // if 1-raref
+					k1 = -sqrt(gamma*pow(Ustar[0], -gamma-1));
+			}
+			if (i < N)
+			{
+				if( (Ustar[0]-UR[0] < -1e-15) && (Ustar[1] - UR[1] > 1e-15) ) // if 2-shock
+					k2 = (Ustar[1] - UR[1])/(UR[0] - Ustar[0]);
+				if( (Ustar[0]-UR[0] > 1e-15) && (Ustar[1] - UR[1] < -1e-15) ) // if 2-raref
+					k2 = sqrt(gamma*pow(Ustar[0], -gamma-1));
+			}
+			if (i < N)
+			{
+				R[0][i] += -Ustar[1];
+				R[1][i] += pow(Ustar[0], -gamma);
+				R[2][i] += k2*(Ustar[2] - UR[2]);
+				R[3][i] += k2*(Ustar[3] - UR[3]);
+			}
+			if (i > 0)
+			{
+				if (ip == 0)
+				{
+					to_add[0] -= -Ustar[1];
+					to_add[1] -= pow(Ustar[0], -gamma);
+					to_add[2] -= k1*(Ustar[2] - UL[2]);
+					to_add[3] -= k1*(Ustar[3] - UL[3]);
+				}
+				else
+				{
+					R[0][i-1] -= -Ustar[1];
+					R[1][i-1] -= pow(Ustar[0], -gamma);
+					R[2][i-1] -= k1*(Ustar[2] - UL[2]);
+					R[3][i-1] -= k1*(Ustar[3] - UL[3]);
+				}
+			}
+		}
+		if (tid != 0)
+			for (int k = 0; k < 4; ++k)
+				R[k][tid*CS-1] += to_add[k];
+	}
 	return;
 };
 
