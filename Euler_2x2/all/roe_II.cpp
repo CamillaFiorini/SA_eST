@@ -102,6 +102,7 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 		
 		vector<double> UL(4), UR(4), Ustar(4), UL_cell(4), UR_cell(4), Ustar_cell(4);
 		double lambda, lambda_cell;
+		vector<double> to_add(4, 0);
 		
 		if(tid != 0)
 			this->get_UR_extrapolated(UL_cell, tid*CS-1);
@@ -123,7 +124,12 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 						R[k][i] += lambda*(Ustar[k]-UR[k]) - sigma[i]*Ustar[k];
 					
 					if (i > 0)
-						R[k][i-1] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+					{
+						if (ip == 0)
+							to_add[k] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+						else
+							R[k][i-1] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+					}
 				}
 			}
 			else
@@ -134,7 +140,12 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 						R[k][i] += lambda*(Ustar[k]-UR[k]);
 					
 					if (i > 0)
-						R[k][i-1] += lambda*(Ustar[k]-UL[k]);
+					{
+						if (ip == 0)
+							to_add[k] += lambda*(Ustar[k]-UL[k]);
+						else
+							R[k][i-1] += lambda*(Ustar[k]-UL[k]);
+					}
 				}
 			}
 
@@ -143,11 +154,19 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 				UR_cell = UL;
 				this->compute_U_star(UL_cell, UR_cell, Ustar_cell);
 				lambda_cell = this->compute_lambda(UL_cell, UR_cell);
-				for (int k = 0; k < 4; ++k)
-					R[k][i-1] += lambda_cell*(2*Ustar_cell[k] - UL_cell[k] - UR_cell[k]);
+				if(ip == 0)
+					for (int k = 0; k < 4; ++k)
+						to_add[k] += lambda_cell*(2*Ustar_cell[k] - UL_cell[k] - UR_cell[k]);
+				else
+					for (int k = 0; k < 4; ++k)
+						R[k][i-1] += lambda_cell*(2*Ustar_cell[k] - UL_cell[k] - UR_cell[k]);
 			}
 			UL_cell = UR;
 		}
+
+		if (tid != 0)
+			for (int k = 0; k < 4; ++k)
+				R[k][tid*CS-1] += to_add[k];
 	}
 	//cout << 49 << "\t" << R[0][49] << endl << 50 << "\t" << R[0][50] << endl << 51 << "\t" << R[0][51] << endl;
 	

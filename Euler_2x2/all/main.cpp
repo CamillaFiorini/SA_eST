@@ -45,7 +45,7 @@ int main()
 	
 	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
 	bool time_secondorder (true);
-	bool CD (false);
+	bool CD (true);
 	st.set_CD(CD);
 	vector<double> lambda;
 	
