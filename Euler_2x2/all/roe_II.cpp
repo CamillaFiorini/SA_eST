@@ -98,11 +98,11 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 		int ChunkSize = N/nt;
 		int CS = ChunkSize;
 		if (tid == nt-1)
-			ChunkSize = N/nt + N%nt;
+			ChunkSize = N/nt + N%nt + 1;
+		vector<double> to_add(4, 0);
 		
 		vector<double> UL(4), UR(4), Ustar(4), UL_cell(4), UR_cell(4), Ustar_cell(4);
 		double lambda, lambda_cell;
-		vector<double> to_add(4, 0);
 		
 		if(tid != 0)
 			this->get_UR_extrapolated(UL_cell, tid*CS-1);
