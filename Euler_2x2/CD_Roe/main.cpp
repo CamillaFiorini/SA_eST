@@ -26,7 +26,7 @@ int main()
 	vector<double> x_bar(N+1,0), sigma(N+1,0), s_x_bar(N+1,0), s_sigma(N+1,0);
 	x_bar[0] = xa; x_bar[N] = xb;
 	s_x_bar[0] = xa; s_x_bar[N] = xb;
-	vector<vector<double> > U_bar(4, u0), F_bar(4, sigma);
+	vector<vector<double> > U_bar(4, u0);
 	
 	vector<int> dirac1(2), dirac2(2);
 	vector<vector<double> > dirac;
@@ -106,8 +106,6 @@ int main()
 		
 		/** staggered grid def **/
 		vector<vector<double> > Ustar;
-		vector<double> s_lambda;
-		st.compute_s_lambdaR(s_lambda);
 		st.compute_Ustar(Ustar);
 		
 		sigma.assign(N+1,0);
@@ -127,9 +125,10 @@ int main()
 					s_sigma[i] = lambda[i];
 				}
 			}
+			/*
 			double left = max(i-2, 0);
 			double right = min(i+1,N-1);
-			/*
+			
 			if(U[1][i] > U[1][i-1] && U[1][i-1] > U[1][left] && U[1][right] > U[1][i]) //rarefaction
 			{
 				if(U[0][i] < U[0][i-1] && U[0][i-1] < U[0][left] && U[0][right] < U[0][i]) // 2-rarefaction

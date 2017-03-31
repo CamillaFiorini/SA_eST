@@ -90,7 +90,7 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 	R.resize(4);
 	for (int k = 0; k < 4; ++k)
 		R[k].assign(N,0);
-	
+
 	#pragma omp parallel default(shared)
 	{
 		int nt = omp_get_num_threads();
@@ -170,6 +170,6 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 	}
 	//cout << 49 << "\t" << R[0][49] << endl << 50 << "\t" << R[0][50] << endl << 51 << "\t" << R[0][51] << endl;
 	
-	
+
 	return;
 };
