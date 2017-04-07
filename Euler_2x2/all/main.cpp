@@ -16,7 +16,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-3), T(0.03), t(0), dt;
+	double xa(0), xb(1), dx(1e-5), T(0.03), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4);
@@ -43,17 +43,50 @@ int main()
 	vector<vector<double> > U_bar(4, u0);
 	/**************/
 	
+	/********** Restoring ***************/
+/*	t = 0.028675308623962;
+	ifstream if_tau ("tau_int.txt");
+	ifstream if_u ("u_int.txt");
+	ifstream if_s_tau ("s_tau_int.txt");
+	ifstream if_s_u ("s_u_int.txt");
+	double dummy; int k(0);
+	while(if_tau >> dummy)
+	{
+		tau0[k] = dummy;
+		++k;
+	}
+	k = 0;
+	while(if_u >> dummy)
+	{
+		u0[k] = dummy;
+		++k;
+	}
+	k = 0;
+	while(if_s_tau >> dummy)
+	{
+		s_tau0[k] = dummy;
+		++k;
+	}
+	k = 0;
+	while(if_s_u >> dummy)
+	{
+		s_u0[k] = dummy;
+		++k;
+	}
+	cout << "End of restoring\n"; */
+	/****************************************/
+	
 	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
-	bool time_secondorder (false);
-	bool CD (false);
+	bool time_secondorder (true);
+	bool CD (true);
 	st.set_CD(CD);
 	vector<double> lambda;
 	
-	ofstream file_u ("../../../k/results/Euler_2x2_Roe_h-o/shock_raref/new_code/u.dat");
-	ofstream file_tau ("../../../k/results/Euler_2x2_Roe_h-o/shock_raref/new_code/tau.dat");
-	ofstream file_s_u ("../../../k/results/Euler_2x2_Roe_h-o/shock_raref/new_code/s_u.dat");
-	ofstream file_s_tau ("../../../k/results/Euler_2x2_Roe_h-o/shock_raref/new_code/s_tau.dat");
-	ofstream file_t ("../../../k/results/Euler_2x2_Roe_h-o/shock_raref/new_code/t.dat");
+	ofstream file_u ("results/u.dat");
+	ofstream file_tau ("results/tau.dat");
+	ofstream file_s_u ("results/s_u.dat");
+	ofstream file_s_tau ("results/s_tau.dat");
+	ofstream file_t ("results/t.dat");
 	
 	file_u.precision(15);
 	file_tau.precision(15);
@@ -110,11 +143,11 @@ int main()
 				sigma.assign(N+1,0);
 				for (int i = 1; i < N; ++i)
 				{
-					if(U[1][i] < U[1][i-1]) // shock
+					if(U[1][i] - U[1][i-1] < -1e-3) // shock
 					{
-						if(U[0][i] < U[0][i-1] ) //1-shock
+						if(U[0][i] - U[0][i-1] < -1e-3 ) //1-shock
 							sigma[i] = -lambda[i];
-						if(U[0][i] > U[0][i-1]) //2-shock
+						if(U[0][i] - U[0][i-1] > 1e-3) //2-shock
 							sigma[i] = lambda[i];
 					}
 					x_bar[i] = dx*i + sigma[i]*0.5*dt;
@@ -126,9 +159,15 @@ int main()
 				/********* compute U_bar ********/
 				for (int i=0; i<N; ++i)
 				{
-					double dxi = (x_bar[i+1]-x_bar[i]);
+					double dxi = dx;
+					double coeff = 1.0;
+					if (fabs(sigma[i]) > 1e-8 || fabs(sigma[i+1]) > 1e-8)
+					{
+						dxi = (x_bar[i+1]-x_bar[i]);
+						coeff = dx/dxi;
+					}
 					for (int k = 0; k < 4; ++k)
-						U_bar[k][i] = dx/dxi*Uold[k][i] + 0.5*dt/dxi*R[k][i];
+						U_bar[k][i] = coeff*Uold[k][i] + 0.5*dt/dxi*R[k][i];
 				}
 				/********************************/
 				
@@ -141,9 +180,15 @@ int main()
 				
 				for (int i=0; i<N; ++i)
 				{
-					double dxi = (x_bar[i+1]-x_bar[i]);
+					double dxi = dx;
+					double coeff = 1.0;
+					if (fabs(sigma[i]) > 1e-8 || fabs(sigma[i+1]) > 1e-8)
+					{
+						dxi = (x_bar[i+1]-x_bar[i]);
+						coeff = dx/dxi;
+					}
 					for (int k = 0; k < 4; ++k)
-						U_int[k][i] = dx/dxi*Uold[k][i] + dt/dxi*R[k][i];
+						U_int[k][i] = coeff*Uold[k][i] + dt/dxi*R[k][i];
 				}
 				/********************************/
 
@@ -193,12 +238,12 @@ int main()
 				sigma.assign(N+1,0);
 				for (int i = 1; i < N; ++i)
 				{
-					if(U[1][i] < U[1][i-1]) // shock
+					if(U[1][i] - U[1][i-1] < -1e-3) // shock
 					{
-						if(U[0][i] < U[0][i-1]) //1-shock
+						if(U[0][i] - U[0][i-1] < -1e-3) //1-shock
 							sigma[i] = -lambda[i];
 
-						if(U[0][i] > U[0][i-1]) //2-shock
+						if(U[0][i] - U[0][i-1] > 1e-3) //2-shock
 							sigma[i] = lambda[i];
 
 					}
@@ -250,7 +295,7 @@ int main()
 		st.set_U(U);
 		t += dt;
 		
-		if (cont%1 == 0 || !first_time)
+		if (cont%200 == 0 || !first_time)
 		{
 			for (int k=0; k<N; ++k)
 			{
@@ -272,5 +317,14 @@ int main()
 	int sec((delta.count())/1000);
 	int msec((delta.count()-sec*1000));
 	cout << sec << "s " << msec << endl;
+	/* Non ho la soluzione esatta qui
+	cout << endl << endl << "\\begin{tikzpicture}\n\\begin{axis}[title={$u(x,T)$}, legend pos=south west, legend style={fill=none}] \n\\addplot[red, thick] coordinates {";
+	for (int i=0; i < N; ++i)
+		cout << "(" << (0.5+i)*dx << ", " << << ") ";
+	
+	cout <<"}; \n\\addplot[blue] coordinates {"
+	for (int i=0; i < N; ++i)
+		cout << "(" << (0.5+i)*dx << ", " << << ") ";
+	cout <<"}; \n\\legend{Exact, Numerical} \n\\end{axis} \n\\end{tikzpicture}\n";*/
 	return 0;
 }
