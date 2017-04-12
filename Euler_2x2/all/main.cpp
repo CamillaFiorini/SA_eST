@@ -16,7 +16,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-5), T(0.03), t(0), dt;
+	double xa(0), xb(1), dx(1e-4), T(0.03), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4);
@@ -156,23 +156,23 @@ int main()
 				st.set_sigma(sigma);
 				st.compute_residual(R);
 
-				/********* compute U_bar ********/
+				/********* compute U_int ********/
 				for (int i=0; i<N; ++i)
 				{
 					double dxi = dx;
-					double coeff = 1.0;
+					double coeff = 0.0;
 					if (fabs(sigma[i]) > 1e-8 || fabs(sigma[i+1]) > 1e-8)
 					{
 						dxi = (x_bar[i+1]-x_bar[i]);
-						coeff = dx/dxi;
+						coeff = (dx-dxi)/dxi;
 					}
 					for (int k = 0; k < 4; ++k)
-						U_bar[k][i] = coeff*Uold[k][i] + 0.5*dt/dxi*R[k][i];
+						U_int[k][i] = Uold[k][i] + coeff*Uold[k][i] + 0.5*dt/dxi*R[k][i];
 				}
 				/********************************/
 				
-				/********* compute U_int ********/
-				st.set_U(U_bar);
+				/********* compute U_bar ********/
+				st.set_U(U_int);
 				st.compute_residual(R);
 				
 				for (int i=0; i<N; ++i)
@@ -181,14 +181,14 @@ int main()
 				for (int i=0; i<N; ++i)
 				{
 					double dxi = dx;
-					double coeff = 1.0;
+					double coeff = 0.0;
 					if (fabs(sigma[i]) > 1e-8 || fabs(sigma[i+1]) > 1e-8)
 					{
 						dxi = (x_bar[i+1]-x_bar[i]);
-						coeff = dx/dxi;
+						coeff = (dx-dxi)/dxi;
 					}
 					for (int k = 0; k < 4; ++k)
-						U_int[k][i] = coeff*Uold[k][i] + dt/dxi*R[k][i];
+						U_bar[k][i] = Uold[k][i] + coeff*U_int[k][i] + dt/dxi*R[k][i];
 				}
 				/********************************/
 
@@ -201,13 +201,13 @@ int main()
 					for (int k=0; k<4; ++k)
 					{
 						if (an < dt/dx*max(0.0, sigma[i]))
-							U[k][i] = U_int[k][i-1];
+							U[k][i] = U_bar[k][i-1];
 
 						if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
-							U[k][i] = U_int[k][i];
+							U[k][i] = U_bar[k][i];
 						
 						if (an > 1+dt/dx*min(0.0, sigma[i+1]))
-							U[k][i] = U_int[k][i+1];
+							U[k][i] = U_bar[k][i+1];
 
 					}
 				}
@@ -295,7 +295,7 @@ int main()
 		st.set_U(U);
 		t += dt;
 		
-		if (cont%200 == 0 || !first_time)
+		if (cont%500 == 0 || !first_time)
 		{
 			for (int k=0; k<N; ++k)
 			{
