@@ -10,6 +10,7 @@ double roe_II::psi(double r) const
 	//return (r*r+r)/(1+r*r);
 };
 
+// returns the Left value of U at the interface i
 void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 {
 	UL.resize(4);
@@ -47,6 +48,7 @@ void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 	return;
 };
 
+// returns the Right value of U at the interface i
 void roe_II::get_UR_extrapolated (vector<double>& UR, int i) const
 {
 	UR.resize(4);

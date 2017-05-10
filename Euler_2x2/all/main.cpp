@@ -16,23 +16,23 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-4), T(0.03), t(0), dt;
+	double xa(0), xb(1), dx(1e-4), T(0.07), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
-	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4);
+	double uL(0), uR(0), tauL(0.7), tauR(0.2), gamma(1.4), x_c(0.3);//uL(-1.563415104628313), uR(-3), tauL(0.2), tauR(0.5), gamma(1.4);
 	double cfl(0.5);
 	vector<double> u0(N, uR);
 	vector<double> tau0(N, tauR);
 	vector<double> s_u0(N, 0);
-	vector<double> s_tau0(N,0);
+	vector<double> s_tau0(N,1);
 	cout.precision(15);
 
-	for (int k=0; k < N/2; ++k)
+	for (int k=0; k < N*x_c; ++k)
 	{
 		u0[k] = uL;
 		tau0[k] = tauL;
 		s_tau0[k] = 0;//1;
-		s_u0[k] = 1;//-9.351212140372281;
+		s_u0[k] = 0;//-9.351212140372281;
 	}
 	
 	vector<vector<double> > U, Uold, U_int, R;
@@ -76,8 +76,8 @@ int main()
 	cout << "End of restoring\n"; */
 	/****************************************/
 	
-	roe_II st(tau0,u0,s_tau0,s_u0,gamma);
-	bool time_secondorder (true);
+	roe_I st(tau0,u0,s_tau0,s_u0,gamma);
+	bool time_secondorder (false);
 	bool CD (true);
 	st.set_CD(CD);
 	vector<double> lambda;
