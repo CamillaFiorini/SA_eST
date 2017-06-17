@@ -33,9 +33,9 @@ public:
 	int detector_s1(const vector<double>&, const vector<double>&, double=1e-10) const;
 	int detector_s2(const vector<double>&, const vector<double>&, double=1e-10) const;
 	int detector_c(const vector<double>&, const vector<double>&, double=1e-10) const;
-	void compute_flux(const vector<double>&, const vector<double>&, vector<double>&, vector<double>&) const;
+	void compute_flux(const vector<double>&, const vector<double>&, vector<double>&, vector<double>&, vector<double>&, int i = 0) const;
 	virtual void get_UL_extrapolated (vector<double>&, int) const = 0;
 	virtual void get_UR_extrapolated (vector<double>&, int) const = 0;
-	void compute_residual(vector<vector<double> >&) const;
+	virtual void compute_residual(vector<vector<double> >&) const;
 };
 #endif

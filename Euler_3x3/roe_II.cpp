@@ -13,15 +13,15 @@ double roe_II::psi(double r) const
 // returns the Left value of U at the interface i
 void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 {
-	UL.resize(4);
+	UL.resize(D);
 	int N = this->get_size();
 	int left = max(i-1,0);
 	int Lleft = max(i-2, 0);
 	int right = min(i, N-1);
 	/*
-	vector<double> rL(4), irL(4);
+	vector<double> rL(D), irL(D);
 	
-	for (int k = 0; k < 4; ++k)
+	for (int k = 0; k < D; ++k)
 	{
 		if (fabs(U[k][left]-U[k][Lleft]) < 1e-15 || fabs(U[k][right]-U[k][left]) < 1e-15)
 		{
@@ -35,7 +35,7 @@ void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 		}
 		UL[k] = U[k][left] +( this->psi(rL[k])*(1-kappa)/4*(U[k][left] - U[k][Lleft]) + this->psi(irL[k])*(1+kappa)/4*(U[k][right] - U[k][left]));
 	}*/
-	for (int k = 0; k < 4; ++k)
+	for (int k = 0; k < D; ++k)
 	{
 		double a = U[k][right] - U[k][left];
 		double b = U[k][left] - U[k][Lleft];
@@ -51,15 +51,15 @@ void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 // returns the Right value of U at the interface i
 void roe_II::get_UR_extrapolated (vector<double>& UR, int i) const
 {
-	UR.resize(4);
+	UR.resize(D);
 	int N = this->get_size();
 	int left = max(i-1,0);
 	int right = min(i, N-1);
 	int Rright = min(i+1, N-1);
 	/*
-	vector<double> rR(4), irR(4);
+	vector<double> rR(D), irR(D);
 	
-	for (int k = 0; k < 4; ++k)
+	for (int k = 0; k < D; ++k)
 	{
 		if (fabs(U[k][Rright]-U[k][right]) < 1e-15 || fabs((U[k][right]-U[k][left])) < 1e-15)
 		{
@@ -74,7 +74,7 @@ void roe_II::get_UR_extrapolated (vector<double>& UR, int i) const
 		UR[k] = U[k][right] +1.*(- this->psi(irR[k])*(1+kappa)/4*(U[k][right] - U[k][left]) - this->psi(rR[k])*(1-kappa)/4*(U[k][Rright] - U[k][right]));
 	}
 	*/
-	 for (int k = 0; k < 4; ++k)
+	 for (int k = 0; k < D; ++k)
 	 {
 		double a = U[k][Rright] - U[k][right];
 		double b = U[k][right] - U[k][left];
@@ -88,90 +88,45 @@ void roe_II::get_UR_extrapolated (vector<double>& UR, int i) const
 
 void roe_II::compute_residual(vector<vector<double> >& R) const
 {
-/*	int N = this->get_size();
-	R.resize(4);
-	for (int k = 0; k < 4; ++k)
+	int N = this->get_size();
+	R.resize(D);
+	for (int k = 0; k < D; ++k)
 		R[k].assign(N,0);
-
-	#pragma omp parallel default(shared)
+	vector<double> UL(D), UR(D), F(D/2), s_ULstar(D/2), s_URstar(D/2), UL_cell(D), UR_cell(D), s_ULstar_cell(D), s_URstar_cell(D);
+	for (int i = 0; i < N+1; ++i)
 	{
-		int nt = omp_get_num_threads();
-		int tid = omp_get_thread_num();
-		int ChunkSize = N/nt;
-		int CS = ChunkSize;
-		if (tid == nt-1)
-			ChunkSize = N/nt + N%nt + 1;
-		vector<double> to_add(4, 0);
-		
-		vector<double> UL(4), UR(4), Ustar(4), UL_cell(4), UR_cell(4), Ustar_cell(4);
-		double lambda, lambda_cell;
-		
-		if(tid != 0)
-			this->get_UR_extrapolated(UL_cell, tid*CS-1);
-
-		for (int ip = 0; ip < ChunkSize; ++ip)
+		this->get_UL_extrapolated(UL, i);
+		this->get_UR_extrapolated(UR, i);
+		this->compute_flux(UL, UR, F, s_ULstar, s_URstar, i);
+		double lambda1 = this->compute_lambda1(UL, UR);
+		double lambda2 = this->compute_lambda2(UL, UR);
+		double lambda3 = this->compute_lambda3(UL, UR);
+		for (int k = 0; k < D/2; ++k)
 		{
-			int i = ip + tid*CS;
-			this->get_UL_extrapolated(UL, i);
-			this->get_UR_extrapolated(UR, i);
+			if(i < N)
+			{
+				R[k][i] += F[k];
+				R[k+3][i] += max(lambda1, 0.0)*(UL[k+3] - s_ULstar[k]) + max(lambda2, 0.0)*(s_ULstar[k]-s_URstar[k]) + max(lambda3,0.0)*(s_URstar[k]-UR[k+3]);
+			}
 			
-			lambda = this->compute_lambda(UL, UR);
-			this->compute_U_star(UL, UR, Ustar);
-
-			if (CD)
-			{
-				for (int k=0; k<4; ++k)
-				{
-					if (i < N)
-						R[k][i] += lambda*(Ustar[k]-UR[k]) - sigma[i]*Ustar[k];
-					
-					if (i > 0)
-					{
-						if (ip == 0)
-							to_add[k] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
-						else
-							R[k][i-1] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
-					}
-				}
-			}
-			else
-			{
-				for (int k=0; k<4; ++k)
-				{
-					if (i < N)
-						R[k][i] += lambda*(Ustar[k]-UR[k]);
-					
-					if (i > 0)
-					{
-						if (ip == 0)
-							to_add[k] += lambda*(Ustar[k]-UL[k]);
-						else
-							R[k][i-1] += lambda*(Ustar[k]-UL[k]);
-					}
-				}
-			}
-
 			if(i > 0)
 			{
-				UR_cell = UL;
-				this->compute_U_star(UL_cell, UR_cell, Ustar_cell);
-				lambda_cell = this->compute_lambda(UL_cell, UR_cell);
-				if(ip == 0)
-					for (int k = 0; k < 4; ++k)
-						to_add[k] += lambda_cell*(2*Ustar_cell[k] - UL_cell[k] - UR_cell[k]);
-				else
-					for (int k = 0; k < 4; ++k)
-						R[k][i-1] += lambda_cell*(2*Ustar_cell[k] - UL_cell[k] - UR_cell[k]);
+				R[k][i-1] -= F[k];
+				R[k+3][i-1] -= min(lambda1, 0.0)*(s_ULstar[k] - UL[k+3]) + min(lambda2, 0.0)*(s_URstar[k] - s_ULstar[k]) + min(lambda3,0.0)*(UR[k+3] - s_URstar[k]);
 			}
-			UL_cell = UR;
 		}
-
-		if (tid != 0)
-			for (int k = 0; k < 4; ++k)
-				R[k][tid*CS-1] += to_add[k];
+		
+		if(i > 0)
+		{
+			UR_cell = UL;
+			this->compute_flux(UL_cell, UR_cell, F, s_ULstar_cell, s_URstar_cell);
+			double lambda1_cell = this->compute_lambda1(UL_cell, UR_cell);
+			double lambda2_cell = this->compute_lambda2(UL_cell, UR_cell);
+			double lambda3_cell = this->compute_lambda3(UL_cell, UR_cell);
+			for (int k = 0; k < D/2; ++k)
+				R[k+3][i-1] += lambda1_cell*(UL_cell[k+3] - s_ULstar_cell[k]) + lambda2_cell*(s_ULstar_cell[k]-s_URstar_cell[k]) + lambda3_cell*(s_URstar_cell[k]-UR_cell[k+3]);
+		}
+		UL_cell = UR;
 	}
-	//cout << 49 << "\t" << R[0][49] << endl << 50 << "\t" << R[0][50] << endl << 51 << "\t" << R[0][51] << endl;
-	*/
-
 	return;
 };
