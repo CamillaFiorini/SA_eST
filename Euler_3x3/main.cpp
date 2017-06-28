@@ -15,7 +15,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-5), T(0.1), t(0), dt;
+	double xa(0), xb(1), dx(1e-3), T(0.1), t(0), dt;
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), rhoL(1), rhoR(0.125), pL(1), pR(0.1), x_c(0.5), gamma(1.4);//uL(19.5975), uR(-6.19633), rhoL(5.99924), rhoR(5.99242), pR(46.0950), pL(460.894), x_c(0.5), gamma(1.4);
@@ -78,9 +78,9 @@ int main()
 	}
 	cout << "End of restoring\n"; */
 	/****************************************/
-	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
-	bool time_secondorder (false);
-	bool CD (false);
+	roe_II st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
+	bool time_secondorder (true);
+	bool CD (true);
 	st.set_CD(CD);
 	/*
 	ofstream file_u ("../../results/Euler_3x3_sensHLLtype/RoeI/dx1e-2/u.dat");
@@ -143,19 +143,19 @@ int main()
 	while (t < T)
 	{
 		++cont;
-		if(cont%1000==0)
+		if(cont%100==0)
 		{
 			cout << "t = " << t << endl;
 		}
-		vector<double> UL, UR;
-		
+		vector<int> d1, d3, c;
+		st.detector_s1(d1, dx);
+		st.detector_s3(d3, dx);
+		st.detector_c(c, dx);
 		for (int i = 0; i < N+1; ++i)
 		{
-			st.get_UR_extrapolated(UR, i);
-			st.get_UL_extrapolated(UL, i);
-			file_d1 << st.detector_s1(UL, UR, 1e-3) << "\t";
-			file_d2 << st.detector_s2(UL, UR, 1e-3) << "\t";
-			file_c << st.detector_c(UL, UR, 1e-3) << "\t";
+			file_d1 << d1[i] << "\t";
+			file_d2 << d3[i] << "\t";
+			file_c << c[i] << "\t";
 		}
 		file_d1 << endl;
 		file_d2 << endl;
@@ -177,24 +177,29 @@ int main()
 			if (CD)
 			{
 				/** staggered grid definition **/
-	/*			sigma.assign(N+1,0);
+				sigma.assign(N+1,0);
+				vector<double> l1, l2, l3;
+				st.compute_lambda1(l1);
+				st.compute_lambda2(l2);
+				st.compute_lambda3(l3);
 				for (int i = 1; i < N; ++i)
 				{
-					if(U[1][i] - U[1][i-1] < -1e-3) // shock
-					{
-						if(U[0][i] - U[0][i-1] < -1e-3 ) //1-shock
-							sigma[i] = -lambda[i];
-						if(U[0][i] - U[0][i-1] > 1e-3) //2-shock
-							sigma[i] = lambda[i];
-					}
-					x_bar[i] = dx*i + sigma[i]*0.5*dt;
+					if( c[i] )
+						sigma[i] = 0;//l2[i];
+					
+					if( d1[i] ) //1-shock
+						sigma[i] = l1[i];
+					
+					if( d3[i] ) //3-shock
+						sigma[i] = l3[i];
+					x_bar[i] = dx*i + sigma[i]*dt;
 				}
-	*/			/********************************/
-	/*			st.set_sigma(sigma);
+				/********************************/
+				st.set_sigma(sigma);
 				st.compute_residual(R);
-	*/
+	
 				/********* compute U_int ********/
-	/*			for (int i=0; i<N; ++i)
+				for (int i=0; i<N; ++i)
 				{
 					double dxi = dx;
 					double coeff = 0.0;
@@ -203,13 +208,13 @@ int main()
 						dxi = (x_bar[i+1]-x_bar[i]);
 						coeff = (dx-dxi)/dxi;
 					}
-					for (int k = 0; k < 4; ++k)
+					for (int k = 0; k < 6; ++k)
 						U_int[k][i] = Uold[k][i] + coeff*Uold[k][i] + 0.5*dt/dxi*R[k][i];
 				}
-	*/			/********************************/
+				/********************************/
 				
 				/********* compute U_bar ********/
-	/*			st.set_U(U_int);
+				st.set_U(U_int);
 				st.compute_residual(R);
 				
 				for (int i=0; i<N; ++i)
@@ -224,18 +229,18 @@ int main()
 						dxi = (x_bar[i+1]-x_bar[i]);
 						coeff = (dx-dxi)/dxi;
 					}
-					for (int k = 0; k < 4; ++k)
+					for (int k = 0; k < 6; ++k)
 						U_bar[k][i] = Uold[k][i] + coeff*U_int[k][i] + dt/dxi*R[k][i];
 				}
-	*/			/********************************/
+				/********************************/
 
 				/*********** sampling ***********/
-	/*			double an;
+				double an;
 				can(cont, an);
 				
 				for (int i=0; i<N; ++i)
 				{
-					for (int k=0; k<4; ++k)
+					for (int k=0; k<6; ++k)
 					{
 						if (an < dt/dx*max(0.0, sigma[i]))
 							U[k][i] = U_bar[k][i-1];
@@ -248,18 +253,15 @@ int main()
 
 					}
 				}
-	*/			/********************************/
+				/********************************/
 			}
 			else
 			{
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
-				{
 					for (int k=0; k<6; ++k)
 						U_int[k][i] = Uold[k][i] + 0.5*dt/dx*R[k][i];
-					//cout << i << " " << R[0][i] << "\n";
-				}
-				//cout << "\nsecondo mezzo time step\n";
+
 				st.set_U(U_int);
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
@@ -272,39 +274,43 @@ int main()
 			if(CD)
 			{
 				/** staggered grid definition **/
-	/*			sigma.assign(N+1,0);
+				sigma.assign(N+1,0);
+				vector<double> l1, l2, l3;
+				st.compute_lambda1(l1);
+				st.compute_lambda2(l2);
+				st.compute_lambda3(l3);
 				for (int i = 1; i < N; ++i)
 				{
-					if(U[1][i] - U[1][i-1] < -1e-3) // shock
-					{
-						if(U[0][i] - U[0][i-1] < -1e-3) //1-shock
-							sigma[i] = -lambda[i];
+					if( c[i] )
+						sigma[i] = 0;//l2[i];
+					
+					if( d1[i] ) //1-shock
+						sigma[i] = l1[i];
 
-						if(U[0][i] - U[0][i-1] > 1e-3) //2-shock
-							sigma[i] = lambda[i];
-
-					}
+					if( d3[i] ) //3-shock
+						sigma[i] = l3[i];
 					x_bar[i] = dx*i + sigma[i]*dt;
 				}
-	*/			/********************************/
-	/*			st.set_sigma(sigma);
+				
+				/********************************/
+				st.set_sigma(sigma);
 				st.compute_residual(R);
-	*/			/********* compute U_bar ********/
-	/*			for (int i=0; i<N; ++i)
+				/********* compute U_bar ********/
+				for (int i=0; i<N; ++i)
 				{
 					double dxi = (x_bar[i+1]-x_bar[i]);
-					for (int k = 0; k < 4; ++k)
+					for (int k = 0; k < 6; ++k)
 						U_bar[k][i] = dx/dxi*Uold[k][i] + dt/dxi*R[k][i];
 				}
-	*/			/********************************/
+				/********************************/
 				
 				/*********** sampling ***********/
-	/*			double an;
+				double an;
 				can(cont, an);
 				
 				for (int i=0; i<N; ++i)
 				{
-					for (int k=0; k<4; ++k)
+					for (int k=0; k<6; ++k)
 					{
 						if (an < dt/dx*max(0.0, sigma[i]))
 							U[k][i] = U_bar[k][i-1];
@@ -316,9 +322,9 @@ int main()
 							U[k][i] = U_bar[k][i+1];
 
 					}
-	*/			}
+				}
 				/********************************/
-	//		}
+			}
 			else
 			{
 				st.compute_residual(R);
@@ -333,7 +339,7 @@ int main()
 		t += dt;
 		
 		st.get_W(W);
-		if (cont%1000 == 0 || !first_time)
+		if (cont%10 == 0 || !first_time)
 		{
 			for (int k=0; k<N; ++k)
 			{

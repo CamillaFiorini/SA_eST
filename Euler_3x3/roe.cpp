@@ -180,7 +180,7 @@ int roe::detector_s1(const vector<double>& UL, const vector<double>& UR, double 
 	return 0;
 };
 
-int roe::detector_s2(const vector<double>& UL, const vector<double>& UR, double threshold) const
+int roe::detector_s3(const vector<double>& UL, const vector<double>& UR, double threshold) const
 {
 	if ((UL[0] - UR[0]) > threshold && (UL[1]/UL[0] - UR[1]/UR[0]) > threshold )
 		return 1;
@@ -192,6 +192,49 @@ int roe::detector_c(const vector<double>& UL, const vector<double>& UR, double t
 	if ((UL[0] - UR[0]) > threshold && fabs(UL[1]/UL[0] - UR[1]/UR[0]) < threshold )
 		return 1;
 	return 0;
+};
+
+
+void roe::detector_s1(vector<int>& d1, double threshold) const
+{
+	int N = U[0].size();
+	d1.resize(N+1);
+	vector<double> UL, UR;
+	for (int i = 0; i <= N; ++i)
+	{
+		this->get_UL_extrapolated(UL, i);
+		this->get_UR_extrapolated(UR, i);
+		d1[i] = this->detector_s1(UL, UR, threshold);
+	}
+	return;
+};
+
+void roe::detector_s3(vector<int>& d3, double threshold) const
+{
+	int N = U[0].size();
+	d3.resize(N+1);
+	vector<double> UL, UR;
+	for (int i = 0; i <= N; ++i)
+	{
+		this->get_UL_extrapolated(UL, i);
+		this->get_UR_extrapolated(UR, i);
+		d3[i] = this->detector_s3(UL, UR, threshold);
+	}
+	return;
+};
+
+void roe::detector_c(vector<int>& c, double threshold) const
+{
+	int N = U[0].size();
+	c.resize(N+1);
+	vector<double> UL, UR;
+	for (int i = 0; i <= N; ++i)
+	{
+		this->get_UL_extrapolated(UL, i);
+		this->get_UR_extrapolated(UR, i);
+		c[i] = this->detector_c(UL, UR, threshold);
+	}
+	return;
 };
 
 void roe::compute_flux(const vector<double>& UL, const vector<double>& UR, vector<double>& F, vector<double>& s_ULstar, vector<double>& s_URstar, int i) const
@@ -209,7 +252,7 @@ void roe::compute_flux(const vector<double>& UL, const vector<double>& UR, vecto
 	double atilde = this->compute_atilde(UL, UR);
 	double Htilde = this->compute_Htilde(UL, UR);
 	vector<double> r1(D), r2(D), r3(D), alpha_tilde(D), S(D/2), UR_star(D/2), UL_star(D/2);
-	int d1(this->detector_s1(UL, UR, 1e-3)), d3(this->detector_s2(UL, UR, 1e-3));
+	int d1(this->detector_s1(UL, UR, 1e-3)), d3(this->detector_s3(UL, UR, 1e-3));
 	double s_atilde = this->compute_s_atilde(UL, UR);
 	double s_utilde = this->compute_s_utilde(UL, UR);
 	double s_Htilde = this->compute_s_Htilde(UL, UR);
@@ -236,8 +279,6 @@ void roe::compute_flux(const vector<double>& UL, const vector<double>& UR, vecto
 	r3[5] = s_Htilde + s_utilde*atilde + utilde*s_atilde;
 	
 	this->compute_alpha_tilde(UL, UR, alpha_tilde);
-	//if(i > 495 && i < 504)
-	//	cerr << i << endl << "lambda1 = " << lambda1 << "\tlambda2 = " << lambda2 << "\tlambda3 = " << lambda3 << "\tutilde = " << utilde << "\tatilde = " << atilde << endl;
 
 	for (int k = 0; k < D/2; ++k)
 	{
@@ -246,18 +287,63 @@ void roe::compute_flux(const vector<double>& UL, const vector<double>& UR, vecto
 		S[k] = (s_utilde - s_atilde)*(UL_star[k] - UL[k])*d1 + s_utilde*(UR_star[k] - UL_star[k]) + (s_utilde + s_atilde)*(UR[k] - UR_star[k])*d3;
 		F[k] = 0.5*(FL[k] + FR[k]) - 0.5*(alpha_tilde[0]*fabs(lambda1)*r1[k] + alpha_tilde[1]*fabs(lambda2)*r2[k] + alpha_tilde[2]*fabs(lambda3)*r3[k]);
 		
-		s_URstar[k] = 1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
-		//UR[k+3] - alpha_tilde[2]*r3[k+3] - alpha_tilde[5]*r3[k];
+		s_URstar[k] = //UR[k+3] - alpha_tilde[2]*r3[k+3] - alpha_tilde[5]*r3[k];
+		1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
 		
-		s_ULstar[k] = 1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
-		//UL[k+3] + alpha_tilde[0]*r1[k+3] + alpha_tilde[3]*r1[k];
-		//if(i > 495 && i < 502)
-		//{
-			//cerr << "s_UL[" << k << "] = " << UL[k+3] << "\ts_UR[" << k << "] = " << UR[k+3] << "\n";
-			//cerr << "s_ULstar[" << k << "] = " << s_ULstar[k] << "\ts_URstar[" << k << "] = " << s_URstar[k] << "\n";
-		//	cerr << "F[" << k << "] = " << F[k] << endl;
-		//	cerr << "lambda3*UR["<<k+3<<"] - lambda1*UL["<<k+3<<"] = " << lambda3 << "*" <<UR[k+3] <<"-"<< lambda1<<"*"<<UL[k+3] << " = " << lambda3*UR[k+3] - lambda1*UL[k+3] << endl;
-		//}
+		s_ULstar[k] = //UL[k+3] + alpha_tilde[0]*r1[k+3] + alpha_tilde[3]*r1[k];
+		1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
+	}
+	
+	return;
+};
+
+void roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vector<double>& UL_star, vector<double>& UR_star) const
+{
+	UL_star.resize(D);
+	UR_star.resize(D);
+	
+	vector<double> r1(D), r3(D), alpha_tilde(D), S(D/2);
+	int d1(this->detector_s1(UL, UR, 1e-3)), d3(this->detector_s3(UL, UR, 1e-3));
+	this->compute_alpha_tilde(UL, UR, alpha_tilde);
+	
+	double utilde = this->compute_utilde(UL, UR);
+	double atilde = this->compute_atilde(UL, UR);
+	double Htilde = this->compute_Htilde(UL, UR);
+	double s_atilde = this->compute_s_atilde(UL, UR);
+	double s_utilde = this->compute_s_utilde(UL, UR);
+	double s_Htilde = this->compute_s_Htilde(UL, UR);
+	vector<double> FL(D), FR(D);
+	this->flux(UL, FL);
+	this->flux(UR, FR);
+	
+	double lambda1 = this->compute_lambda1(UL, UR);
+	double lambda3 = this->compute_lambda3(UL, UR);
+	
+	r1[0] = 1;
+	r1[1] = utilde - atilde;
+	r1[2] = Htilde - utilde*atilde;
+	r1[3] = 0;
+	r1[4] = s_utilde - s_atilde;
+	r1[5] = s_Htilde - s_utilde*atilde - utilde*s_atilde;
+	
+	r3[0] = 1;
+	r3[1] = utilde + atilde;
+	r3[2] = Htilde + utilde*atilde;
+	r3[3] = 0;
+	r3[4] = s_utilde + s_atilde;
+	r3[5] = s_Htilde + s_utilde*atilde + utilde*s_atilde;
+	
+	for (int k = 0; k < D/2; ++k)
+	{
+		UL_star[k] = UL[k] + alpha_tilde[0]*r1[k];
+		UR_star[k] = UR[k] - alpha_tilde[2]*r3[k];
+		S[k] = (s_utilde - s_atilde)*(UL_star[k] - UL[k])*d1 + s_utilde*(UR_star[k] - UL_star[k]) + (s_utilde + s_atilde)*(UR[k] - UR_star[k])*d3;
+		
+		UR_star[k+3] = //UR[k+3] - alpha_tilde[2]*r3[k+3] - alpha_tilde[5]*r3[k];
+		1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
+		
+		UL_star[k+3] = //UL[k+3] + alpha_tilde[0]*r1[k+3] + alpha_tilde[3]*r1[k];
+		1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
 	}
 	
 	return;
@@ -269,27 +355,47 @@ void roe::compute_residual(vector<vector<double> >& R) const
 	R.resize(D);
 	for (int k = 0; k < D; ++k)
 		R[k].assign(N,0);
-	vector<double> UL(D), UR(D), F(D/2), s_ULstar(D/2), s_URstar(D/2);
+	//cout << "sigma.size() = " << sigma.size() << endl;
+	vector<double> UL(D), UR(D), F(D/2), UL_star(D), UR_star(D), s_ULstar(D/2), s_URstar(D/2);
 	for (int i = 0; i < N+1; ++i)
 	{
 		this->get_UL_extrapolated(UL, i);
 		this->get_UR_extrapolated(UR, i);
-		this->compute_flux(UL, UR, F, s_ULstar, s_URstar, i);
 		double lambda1 = this->compute_lambda1(UL, UR);
 		double lambda2 = this->compute_lambda2(UL, UR);
 		double lambda3 = this->compute_lambda3(UL, UR);
-		for (int k = 0; k < D/2; ++k)
+		if(CD)
 		{
-			if(i < N)
+			this->compute_U_star(UL, UR, UL_star, UR_star);
+			for (int k = 0; k < D; ++k)
 			{
-				R[k][i] += F[k];
-				R[k+3][i] += max(lambda1, 0.0)*(UL[k+3] - s_ULstar[k]) + max(lambda2, 0.0)*(s_ULstar[k]-s_URstar[k]) + max(lambda3,0.0)*(s_URstar[k]-UR[k+3]);
+				if(i < N)
+				{
+					R[k][i] += max(lambda1, 0.0)*UL[k]*(fabs(sigma[i])<1e-10) + (max(lambda2, sigma[i])-max(lambda1, sigma[i]))*UL_star[k] + (max(lambda3,sigma[i])-max(lambda2, sigma[i]))*UR_star[k] - max(lambda3,sigma[i])*UR[k];
+				}
+				
+				if(i > 0)
+				{
+					R[k][i-1] += min(lambda1, sigma[i])*UL[k] + (min(lambda2, sigma[i]) - min(lambda1, sigma[i]))*UL_star[k] + (min(lambda3,sigma[i])-min(lambda2, sigma[i]))*UR_star[k] - min(lambda3, 0.0)*UR[k]*(fabs(sigma[i])<1e-10);
+				}
 			}
-			
-			if(i > 0)
+		}
+		else
+		{
+			this->compute_flux(UL, UR, F, s_ULstar, s_URstar, i);
+			for (int k = 0; k < D/2; ++k)
 			{
-				R[k][i-1] -= F[k];
-				R[k+3][i-1] -= min(lambda1, 0.0)*(s_ULstar[k] - UL[k+3]) + min(lambda2, 0.0)*(s_URstar[k] - s_ULstar[k]) + min(lambda3,0.0)*(UR[k+3] - s_URstar[k]);
+				if(i < N)
+				{
+					R[k][i] += F[k];
+					R[k+3][i] += max(lambda1, 0.0)*(UL[k+3] - s_ULstar[k]) + max(lambda2, 0.0)*(s_ULstar[k]-s_URstar[k]) + max(lambda3,0.0)*(s_URstar[k]-UR[k+3]);
+				}
+				
+				if(i > 0)
+				{
+					R[k][i-1] -= F[k];
+					R[k+3][i-1] -= min(lambda1, 0.0)*(s_ULstar[k] - UL[k+3]) + min(lambda2, 0.0)*(s_URstar[k] - s_ULstar[k]) + min(lambda3,0.0)*(UR[k+3] - s_URstar[k]);
+				}
 			}
 		}
 	}

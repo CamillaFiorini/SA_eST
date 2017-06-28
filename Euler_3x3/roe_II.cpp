@@ -92,30 +92,49 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 	R.resize(D);
 	for (int k = 0; k < D; ++k)
 		R[k].assign(N,0);
-	vector<double> UL(D), UR(D), F(D/2), s_ULstar(D/2), s_URstar(D/2), UL_cell(D), UR_cell(D), s_ULstar_cell(D), s_URstar_cell(D);
+	vector<double> UL(D), UR(D), F(D/2), UL_star(D), UR_star(D), s_ULstar(D/2), s_URstar(D/2), UL_cell(D), UR_cell(D), s_ULstar_cell(D), s_URstar_cell(D);
 	for (int i = 0; i < N+1; ++i)
 	{
 		this->get_UL_extrapolated(UL, i);
 		this->get_UR_extrapolated(UR, i);
-		this->compute_flux(UL, UR, F, s_ULstar, s_URstar, i);
 		double lambda1 = this->compute_lambda1(UL, UR);
 		double lambda2 = this->compute_lambda2(UL, UR);
 		double lambda3 = this->compute_lambda3(UL, UR);
-		for (int k = 0; k < D/2; ++k)
+		
+		if(CD)
 		{
-			if(i < N)
+			this->compute_U_star(UL, UR, UL_star, UR_star);
+			for (int k = 0; k < D; ++k)
 			{
-				R[k][i] += F[k];
-				R[k+3][i] += max(lambda1, 0.0)*(UL[k+3] - s_ULstar[k]) + max(lambda2, 0.0)*(s_ULstar[k]-s_URstar[k]) + max(lambda3,0.0)*(s_URstar[k]-UR[k+3]);
-			}
-			
-			if(i > 0)
-			{
-				R[k][i-1] -= F[k];
-				R[k+3][i-1] -= min(lambda1, 0.0)*(s_ULstar[k] - UL[k+3]) + min(lambda2, 0.0)*(s_URstar[k] - s_ULstar[k]) + min(lambda3,0.0)*(UR[k+3] - s_URstar[k]);
+				if(i < N)
+				{
+					R[k][i] += max(lambda1, 0.0)*UL[k]*(fabs(sigma[i])<1e-10) + (max(lambda2, sigma[i])-max(lambda1, sigma[i]))*UL_star[k] + (max(lambda3,sigma[i])-max(lambda2, sigma[i]))*UR_star[k] - max(lambda3,sigma[i])*UR[k];
+				}
+				
+				if(i > 0)
+				{
+					R[k][i-1] += min(lambda1, sigma[i])*UL[k] + (min(lambda2, sigma[i]) - min(lambda1, sigma[i]))*UL_star[k] + (min(lambda3,sigma[i])-min(lambda2, sigma[i]))*UR_star[k] - min(lambda3, 0.0)*UR[k]*(fabs(sigma[i])<1e-10);
+				}
 			}
 		}
-		
+		else
+		{
+			this->compute_flux(UL, UR, F, s_ULstar, s_URstar, i);
+			for (int k = 0; k < D/2; ++k)
+			{
+				if(i < N)
+				{
+					R[k][i] += F[k];
+					R[k+3][i] += max(lambda1, 0.0)*(UL[k+3] - s_ULstar[k]) + max(lambda2, 0.0)*(s_ULstar[k]-s_URstar[k]) + max(lambda3,0.0)*(s_URstar[k]-UR[k+3]);
+				}
+				
+				if(i > 0)
+				{
+					R[k][i-1] -= F[k];
+					R[k+3][i-1] -= min(lambda1, 0.0)*(s_ULstar[k] - UL[k+3]) + min(lambda2, 0.0)*(s_URstar[k] - s_ULstar[k]) + min(lambda3,0.0)*(UR[k+3] - s_URstar[k]);
+				}
+			}
+		}
 		if(i > 0)
 		{
 			UR_cell = UL;
