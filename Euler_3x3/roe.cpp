@@ -293,7 +293,23 @@ void roe::compute_flux(const vector<double>& UL, const vector<double>& UR, vecto
 		s_ULstar[k] = //UL[k+3] + alpha_tilde[0]*r1[k+3] + alpha_tilde[3]*r1[k];
 		1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
 	}
+	/*
+	double s_lambda1 = s_utilde - s_atilde;
+	double s_lambda3 = s_utilde + s_atilde;
+	double b1 = s_lambda1*(UL_star[0]-UL[0])*d1 + UL[4] - lambda1*UL[3];
+	double b2 = s_utilde*(UR_star[0] - UL_star[0]);
+	double b3 = s_lambda3*(UR[0]-UR_star[0])*d3 - UR[4] + lambda3*UR[3];
+	double b4 = s_utilde*(UR_star[1]-UL_star[1]);
+	double b5 = S[1] - lambda1*UL[4] + lambda3*UR[4] - FR[4] + FL[4];
+	double b6 = S[2] - lambda1*UL[5] + lambda3*UR[5] - FR[5] + FL[5];
 	
+	s_ULstar[0] = ((2*atilde+utilde)*b1 + (atilde+utilde)*b2 + utilde*b3 - b5)/(2*atilde*atilde);
+	s_ULstar[1] = ((utilde*utilde+atilde*utilde)*b1 + (utilde*utilde-atilde*atilde)*b2 + (utilde*utilde-atilde)*utilde*b3 + (atilde-utilde)*b5)/(2*atilde*atilde);
+	s_ULstar[2] = ((utilde*utilde*utilde + atilde*utilde*utilde)*b1 + utilde*utilde*utilde*b2 + (utilde*utilde*utilde-atilde*utilde*utilde)*b3 - 2*atilde*atilde*b4 - utilde*utilde*b5 + 2*atilde*b6)/(4*atilde*atilde);
+	s_URstar[0] = (b1+b2+b3)/atilde - s_ULstar[0];
+	s_URstar[1] = b5/atilde - s_ULstar[1];
+	s_URstar[2] = b6/atilde - s_ULstar[2];
+	*/
 	return;
 };
 
@@ -316,8 +332,10 @@ void roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vec
 	this->flux(UL, FL);
 	this->flux(UR, FR);
 	
-	double lambda1 = this->compute_lambda1(UL, UR);
-	double lambda3 = this->compute_lambda3(UL, UR);
+	double lambda1 = utilde-atilde;//this->compute_lambda1(UL, UR);
+	double lambda3 = utilde+atilde;//this->compute_lambda3(UL, UR);
+	double s_lambda1 = s_utilde-s_atilde;
+	double s_lambda3 = s_utilde+s_atilde;
 	
 	r1[0] = 1;
 	r1[1] = utilde - atilde;
