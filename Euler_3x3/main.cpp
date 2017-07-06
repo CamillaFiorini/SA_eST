@@ -78,9 +78,9 @@ int main()
 	}
 	cout << "End of restoring\n"; */
 	/****************************************/
-	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
-	bool time_secondorder (false);
-	bool CD (false);
+	roe_II st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
+	bool time_secondorder (true);
+	bool CD (true);
 	st.set_CD(CD);
 	/*
 	ofstream file_u ("../../results/Euler_3x3_sensHLLtype/RoeI/dx1e-2/u.dat");
@@ -188,11 +188,11 @@ int main()
 						sigma[i] = 0;//l2[i];
 					
 					if( d1[i] ) //1-shock
-						sigma[i] = 0;//l1[i];
+						sigma[i] = l1[i];
 					
 					if( d3[i] ) //3-shock
 						sigma[i] = l3[i];
-					x_bar[i] = dx*i + sigma[i]*dt;
+					x_bar[i] = dx*i + sigma[i]*dt*0.5;
 				}
 				/********************************/
 				st.set_sigma(sigma);
