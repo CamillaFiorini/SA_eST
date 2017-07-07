@@ -9,11 +9,15 @@ using namespace std;
 
 class roe:public state
 {
+private:
+	bool sens_hllc;
 public:
 	// Constructors
-	roe(vector<vector<double> > u, double g) : state(u,g) {};
-	roe(vector<double>a, vector<double>b, vector<double>c, vector<double>d, vector<double>e, vector<double>f, double g) : state(a,b,c,d,e,f,g) {};
+	roe(vector<vector<double> > u, double g) : state(u,g), sens_hllc(false) {};
+	roe(vector<double>a, vector<double>b, vector<double>c, vector<double>d, vector<double>e, vector<double>f, double g) : state(a,b,c,d,e,f,g), sens_hllc(false) {};
 	// Methods
+	inline void set_sens_hllc(bool c) {sens_hllc = c;};
+	inline bool get_sens_hllc() {return sens_hllc;};
 	double compute_lambda1(const vector<double>&, const vector<double>&) const;
 	void compute_lambda1(vector<double>&) const;
 	double compute_lambda2(const vector<double>&, const vector<double>&) const;

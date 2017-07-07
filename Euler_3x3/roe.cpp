@@ -309,10 +309,8 @@ void roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vec
 	this->flux(UL, FL);
 	this->flux(UR, FR);
 	
-	double lambda1 = utilde-atilde;//this->compute_lambda1(UL, UR);
-	double lambda3 = utilde+atilde;//this->compute_lambda3(UL, UR);
-	double s_lambda1 = s_utilde-s_atilde;
-	double s_lambda3 = s_utilde+s_atilde;
+	double lambda1 = utilde-atilde;
+	double lambda3 = utilde+atilde;
 	
 	r1[0] = 1;
 	r1[1] = utilde - atilde;
@@ -333,29 +331,31 @@ void roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vec
 		UL_star[k] = UL[k] + alpha_tilde[0]*r1[k];
 		UR_star[k] = UR[k] - alpha_tilde[2]*r3[k];
 		S[k] = (s_utilde - s_atilde)*(UL_star[k] - UL[k])*d1 + s_utilde*(UR_star[k] - UL_star[k]) + (s_utilde + s_atilde)*(UR[k] - UR_star[k])*d3;
-		
-		UR_star[k+3] = 1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
-		UL_star[k+3] = 1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
+		if (!sens_hllc)
+		{
+			UR_star[k+3] = 1.0/(lambda3-lambda1)*(lambda3*UR[k+3] - lambda1*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
+			UL_star[k+3] = UR_star[k+3];
+		}
 	}
-	
-	/*
-	double s_lambda1 = s_utilde - s_atilde;
-	double s_lambda3 = s_utilde + s_atilde;
-	double b1 = s_lambda1*(UL_star[0]-UL[0])*d1 + UL[4] - lambda1*UL[3];
-	double b2 = s_utilde*(UR_star[0] - UL_star[0]);
-	double b3 = s_lambda3*(UR[0]-UR_star[0])*d3 - UR[4] + lambda3*UR[3];
-	double b4 = s_utilde*(UR_star[1]-UL_star[1]);
-	double b5 = S[1] - lambda1*UL[4] + lambda3*UR[4] - FR[4] + FL[4];
-	double b6 = S[2] - lambda1*UL[5] + lambda3*UR[5] - FR[5] + FL[5];
+	if(sens_hllc)
+	{
+		double s_lambda1 = s_utilde - s_atilde;
+		double s_lambda3 = s_utilde + s_atilde;
+		double b1 = s_lambda1*(UL_star[0]-UL[0])*d1 + UL[4] - lambda1*UL[3];
+		double b2 = s_utilde*(UR_star[0] - UL_star[0]);
+		double b3 = s_lambda3*(UR[0]-UR_star[0])*d3 - UR[4] + lambda3*UR[3];
+		double b4 = s_utilde*(UR_star[1]-UL_star[1]);
+		double b5 = S[1] - lambda1*UL[4] + lambda3*UR[4] - FR[4] + FL[4];
+		double b6 = S[2] - lambda1*UL[5] + lambda3*UR[5] - FR[5] + FL[5];
 
-	UL_star[3] = ((2*atilde+utilde)*b1 + (atilde+utilde)*b2 + utilde*b3 - b5)/(2*atilde*atilde);
-	UL_star[4] = ((utilde*utilde+atilde*utilde)*b1 + (utilde*utilde-atilde*atilde)*b2 + (utilde*utilde-atilde)*utilde*b3 + (atilde-utilde)*b5)/(2*atilde*atilde);
-	UL_star[5] = ((utilde*utilde*utilde + atilde*utilde*utilde)*b1 + utilde*utilde*utilde*b2 + (utilde*utilde*utilde-atilde*utilde*utilde)*b3 - 2*atilde*atilde*b4 - utilde*utilde*b5 + 2*atilde*b6)/(4*atilde*atilde);
-	UR_star[3] = (b1+b2+b3)/atilde - UL_star[3];
-	UR_star[4] = b5/atilde - UL_star[4];
-	UR_star[5] = b6/atilde - UL_star[5];
-	*/
-	
+		UL_star[3] = ((2*atilde+utilde)*b1 + (atilde+utilde)*b2 + utilde*b3 - b5)/(2*atilde*atilde);
+		UL_star[4] = ((utilde*utilde+atilde*utilde)*b1 + (utilde*utilde-atilde*atilde)*b2 + (utilde*utilde-atilde)*utilde*b3 + (atilde-utilde)*b5)/(2*atilde*atilde);
+		UL_star[5] = ((utilde*utilde*utilde + atilde*utilde*utilde)*b1 + utilde*utilde*utilde*b2 + (utilde*utilde*utilde-atilde*utilde*utilde)*b3 - 2*atilde*atilde*b4 - utilde*utilde*b5 + 2*atilde*b6)/(4*atilde*atilde);
+		UR_star[3] = (b1+b2+b3)/atilde - UL_star[3];
+		UR_star[4] = b5/atilde - UL_star[4];
+		UR_star[5] = b6/atilde - UL_star[5];
+	}
+
 	return;
 };
 
