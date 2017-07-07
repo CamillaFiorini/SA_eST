@@ -78,8 +78,8 @@ int main()
 	}
 	cout << "End of restoring\n"; */
 	/****************************************/
-	roe_II st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
-	bool time_secondorder (true);
+	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
+	bool time_secondorder (false);
 	bool CD (true);
 	st.set_CD(CD);
 	/*
