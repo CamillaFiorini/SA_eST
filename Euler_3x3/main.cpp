@@ -15,12 +15,13 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-3), T(0.1), t(0), dt;
+	double xa(0), xb(1), dx(1e-5), T(0.1), t(0), dt;
+	int n_print(5000);
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), rhoL(1), rhoR(0.125), pL(1), pR(0.1), x_c(0.5), gamma(1.4);//uL(19.5975), uR(-6.19633), rhoL(5.99924), rhoR(5.99242), pR(46.0950), pL(460.894), x_c(0.5), gamma(1.4);
 	double s_uL(0), s_uR(0), s_rhoL(0), s_rhoR(0), s_pL(1), s_pR(0);
-	double cfl(0.7);
+	double cfl(0.5);
 	vector<double> u0(N, uR);
 	vector<double> rho0(N, rhoR);
 	vector<double> p0(N, pR);
@@ -43,7 +44,7 @@ int main()
 	/***** CD *****/
 	vector<double> x_bar(N+1,0), sigma(N+1,0);
 	x_bar[0] = xa; x_bar[N] = xb;
-	vector<vector<double> > U_bar(4, u0);
+	vector<vector<double> > U_bar(6, u0);
 	/**************/
 	
 	/********** Restoring ***************/
@@ -148,20 +149,23 @@ int main()
 		{
 			cout << "t = " << t << endl;
 		}
+		
 		vector<int> d1, d3, c;
 		st.detector_s1(d1, dx);
 		st.detector_s3(d3, dx);
 		st.detector_c(c, dx);
-		for (int i = 0; i < N+1; ++i)
+		if(cont%n_print==0)
 		{
-			file_d1 << d1[i] << "\t";
-			file_d2 << d3[i] << "\t";
-			file_c << c[i] << "\t";
+			for (int i = 0; i < N+1; ++i)
+			{
+				file_d1 << d1[i] << "\t";
+				file_d2 << d3[i] << "\t";
+				file_c << c[i] << "\t";
+			}
+			file_d1 << endl;
+			file_d2 << endl;
+			file_c << endl;
 		}
-		file_d1 << endl;
-		file_d2 << endl;
-		file_c << endl;
-		
 		
 		/*** dt computation ***/
 		double mv = st.compute_maxvel();
@@ -339,7 +343,7 @@ int main()
 		t += dt;
 		
 		st.get_W(W);
-		if (cont%10 == 0 || !first_time)
+		if (cont%n_print == 0 || !first_time)
 		{
 			for (int k=0; k<N; ++k)
 			{
