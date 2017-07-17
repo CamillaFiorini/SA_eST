@@ -26,7 +26,6 @@ public:
 	inline void set_xb(double B) {xb = B;};
 	inline void set_Dx(double delta) {Dx = delta; N = int(round((xb-xa)/Dx)); };
 	inline void set_N(int n) {N=n; Dx=(xb-xa)/N;}
-	
 };
 
 #endif

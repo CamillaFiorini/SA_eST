@@ -25,6 +25,7 @@ public:
 	
 	// Set and get members
 	inline int get_size() const {return U[0].size();};
+	inline int get_dimension() const {return U.size();};
 	inline void set_U(const vector<vector<double> >& u) {U=u; D=u.size(); return;};
 	inline void get_U(vector<vector<double> >& u) const {u=U;return;};
 	void get_U(vector<double>& u, int i) const;
@@ -36,9 +37,18 @@ public:
 	inline bool get_CD() const {return CD;};
 	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
 	inline void get_sigma(vector<double>& s) {s = sigma;};
-	// Methods
+	// Virtual methods
 	virtual void compute_residual(vector<vector<double> >&) const = 0;
 	virtual double compute_maxvel() const = 0;
+	virtual double compute_lambda1(const vector<double>&, const vector<double>&) const = 0;
+	virtual void compute_lambda1(vector<double>&) const = 0;
+	virtual double compute_lambda2(const vector<double>&, const vector<double>&) const = 0;
+	virtual void compute_lambda2(vector<double>&) const = 0;
+	virtual double compute_lambda3(const vector<double>&, const vector<double>&) const = 0;
+	virtual void compute_lambda3(vector<double>&) const = 0;
+	virtual void detector_s1(vector<int>&, double=1e-10) const = 0;
+	virtual void detector_s3(vector<int>&, double=1e-10) const = 0;
+	virtual void detector_c(vector<int>&, double=1e-10) const = 0;
 	
 };
 #endif
