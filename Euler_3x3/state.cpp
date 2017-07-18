@@ -53,4 +53,76 @@ void state::flux(const vector<double>& u, vector<double>& F) const
 	double s_u = (u[4] - u[3]*u[1]/u[0])/u[0];
 	F[4] = (u[3]*u[1]*u[1])/(u[0]*u[0]) + 2*u[1]*s_u + (gamma-1)*(u[5]-0.5*u[3]*u[1]/u[0]*u[1]/u[0] - u[1]*s_u); //s_rho*u*u + 2*rho*u*s_u + s_p
 	F[5] = s_u*(u[2] + (gamma-1)*(u[2] - 0.5*u[1]*u[1]/u[0]) ) + u[1]/u[0]*(u[5] + (gamma-1)*(u[5]-0.5*u[3]*u[1]/u[0]*u[1]/u[0] - u[1]*s_u)); //s_uL*(EL+pL) + uL*(s_EL+s_pL);
-}
+};
+
+void state::print_conservative(const string& path, ios_base::openmode mode, int prec)
+{
+	ofstream file_rho (path+"rho.dat", mode);
+	ofstream file_rhou (path+"rhou.dat", mode);
+	ofstream file_rhoE (path+"rhoE.dat", mode);
+	ofstream file_s_rho (path+"s_rho.dat", mode);
+	ofstream file_s_rhou (path+"s_rhou.dat", mode);
+	ofstream file_s_rhoE (path+"s_rhoE.dat", mode);
+	
+	file_rho.precision(prec);
+	file_rhou.precision(prec);
+	file_rhoE.precision(prec);
+	file_s_rho.precision(prec);
+	file_s_rhou.precision(prec);
+	file_s_rhoE.precision(prec);
+	
+	for (unsigned int k = 0; k < U[0].size(); ++k)
+	{
+		file_rho << U[0][k] << "\t";
+		file_rhou << U[1][k] << "\t";
+		file_rhoE << U[2][k] << "\t";
+		file_s_rho << U[3][k] << "\t";
+		file_s_rhou << U[4][k] << "\t";
+		file_s_rhoE << U[5][k] << "\t";
+	}
+	file_rho << endl;
+	file_rhou << endl;
+	file_rhoE << endl;
+	file_s_rho << endl;
+	file_s_rhou << endl;
+	file_s_rhoE << endl;
+	
+	return;
+};
+void state::print_physical(const string& path, ios_base::openmode mode, int prec)
+{
+	ofstream file_u (path+"u.dat", mode);
+	ofstream file_rho (path+"rho.dat", mode);
+	ofstream file_p (path+"p.dat", mode);
+	ofstream file_s_u (path+"s_u.dat", mode);
+	ofstream file_s_rho (path+"s_rho.dat", mode);
+	ofstream file_s_p (path+"s_p.dat", mode);
+	
+	file_u.precision(prec);
+	file_rho.precision(prec);
+	file_p.precision(prec);
+	file_s_u.precision(prec);
+	file_s_rho.precision(prec);
+	file_s_p.precision(prec);
+	
+	vector<vector<double> > W;
+	this->get_W(W);
+	
+	for (unsigned int k = 0; k < W[0].size(); ++k)
+	{
+		file_rho << W[0][k] << "\t";
+		file_u << W[1][k] << "\t";
+		file_p << W[2][k] << "\t";
+		file_s_rho << W[3][k] << "\t";
+		file_s_u << W[4][k] << "\t";
+		file_s_p << W[5][k] << "\t";
+	}
+	file_rho << endl;
+	file_u << endl;
+	file_p << endl;
+	file_s_rho << endl;
+	file_s_u << endl;
+	file_s_p << endl;
+
+	return;
+};

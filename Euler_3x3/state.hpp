@@ -4,6 +4,8 @@
 #include<vector>
 #include<cmath>
 #include<iostream>
+#include<string>
+#include<fstream>
 #include<omp.h>
 
 using namespace std;
@@ -37,6 +39,9 @@ public:
 	inline bool get_CD() const {return CD;};
 	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
 	inline void get_sigma(vector<double>& s) {s = sigma;};
+	void print_conservative(const string&, ios_base::openmode mode = ios_base::out, int = 15);
+	void print_physical(const string&, ios_base::openmode mode = ios_base::out, int = 15);
+	
 	// Virtual methods
 	virtual void compute_residual(vector<vector<double> >&) const = 0;
 	virtual double compute_maxvel() const = 0;
