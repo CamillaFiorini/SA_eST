@@ -1,6 +1,6 @@
 #include"time_solver.hpp"
 
-void time_solver::solve (state& st)
+double time_solver::solve (state& st)
 {
 	bool first_time (true);
 	int cont(0);
@@ -13,9 +13,10 @@ void time_solver::solve (state& st)
 	
 	while (t < end_time)
 	{
-		if (cont%100==0)
+		if (cont%5000==0)
 		{
-			cout << "t = " << t << endl;
+			cout << t << endl;
+			st.print_physical("", ios::out | ios::app);
 		}
 		++cont;
 		vector<int> d1, d3, c;
@@ -208,6 +209,6 @@ void time_solver::solve (state& st)
 		st.set_U(U);
 		t += dt;
 	}
-	return;
+	return t;
 
 }

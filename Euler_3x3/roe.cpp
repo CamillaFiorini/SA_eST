@@ -290,7 +290,7 @@ void roe::compute_flux(const vector<double>& UL, const vector<double>& UR, vecto
 	return;
 };
 */
-void roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vector<double>& UL_star, vector<double>& UR_star) const
+void roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vector<double>& UL_star, vector<double>& UR_star, int i) const
 {
 	UL_star.resize(D);
 	UR_star.resize(D);
@@ -347,10 +347,12 @@ void roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vec
 		double b4 = s_utilde*(UR_star[1]-UL_star[1]);
 		double b5 = S[1] - lambda1*UL[4] + lambda3*UR[4] - FR[4] + FL[4];
 		double b6 = S[2] - lambda1*UL[5] + lambda3*UR[5] - FR[5] + FL[5];
-
+		
 		UL_star[3] = ((2*atilde+utilde)*b1 + (atilde+utilde)*b2 + utilde*b3 - b5)/(2*atilde*atilde);
-		UL_star[4] = ((utilde*utilde+atilde*utilde)*b1 + (utilde*utilde-atilde*atilde)*b2 + (utilde*utilde-atilde)*utilde*b3 + (atilde-utilde)*b5)/(2*atilde*atilde);
-		UL_star[5] = ((utilde*utilde*utilde + atilde*utilde*utilde)*b1 + utilde*utilde*utilde*b2 + (utilde*utilde*utilde-atilde*utilde*utilde)*b3 - 2*atilde*atilde*b4 - utilde*utilde*b5 + 2*atilde*b6)/(4*atilde*atilde);
+		UL_star[4] = ((utilde*utilde+atilde*utilde)*b1 + (utilde*utilde-atilde*atilde)*b2 + (utilde*utilde-atilde*utilde)*b3 + (atilde-utilde)*b5)/(2*atilde*atilde);
+		
+		UL_star[5] = ((utilde*utilde*utilde + atilde*utilde*utilde)*(gamma-1)*b1 + (utilde*utilde*utilde*(gamma-1) + (2-gamma)*2*atilde*atilde*utilde)*b2 + (utilde*utilde*utilde-atilde*utilde*utilde)*(gamma-1)*b3 - 2*atilde*atilde*b4 + utilde*utilde*(1-gamma)*b5 + 2*(gamma-1)*atilde*b6)/(4*atilde*atilde*(gamma-1));
+		
 		UR_star[3] = (b1+b2+b3)/atilde - UL_star[3];
 		UR_star[4] = b5/atilde - UL_star[4];
 		UR_star[5] = b6/atilde - UL_star[5];
@@ -391,7 +393,7 @@ void roe::compute_residual(vector<vector<double> >& R) const
 		}
 		else
 		{
-			this->compute_U_star(UL, UR, UL_star, UR_star);
+			this->compute_U_star(UL, UR, UL_star, UR_star, i);
 			for (int k = 0; k < D; ++k)
 			{
 				if(i < N)

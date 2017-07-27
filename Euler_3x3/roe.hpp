@@ -41,7 +41,7 @@ public:
 	void detector_s3(vector<int>&, double=1e-10) const;
 	void detector_c(vector<int>&, double=1e-10) const;
 	void compute_flux(const vector<double>&, const vector<double>&, vector<double>&, vector<double>&, vector<double>&, int i = 0) const;
-	void compute_U_star(const vector<double>&, const vector<double>&, vector<double>&, vector<double>&) const;
+	void compute_U_star(const vector<double>&, const vector<double>&, vector<double>&, vector<double>&, int =1) const;
 	virtual void get_UL_extrapolated (vector<double>&, int) const = 0;
 	virtual void get_UR_extrapolated (vector<double>&, int) const = 0;
 	virtual void compute_residual(vector<vector<double> >&) const;

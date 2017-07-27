@@ -11,15 +11,15 @@
 #include"roe_II.hpp"
 #include"utilities.hpp"
 #include"time_solver.hpp"
-#include"printer.hpp"
 
 using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-3), T(0.1), t(0);
+	double xa(0), xb(1), dx(1e-2), T(0.1), t(0);
 	//int n_print(5/(100*dx));
-	string path = "results/"; //string path = "../../results/Euler_3x3_conv/second_order/Diff_HLL/dx1e-5/";
+	string path = "results/";
+	//string path = "../../results/Euler_3x3_conv/second_order/Diff_HLLC/dx1e-2/";
 	mesh M (xa, xb, dx);
 	int N = M.get_N();
 	double uL(0), uR(0), rhoL(1), rhoR(0.125), pL(1), pR(0.1), x_c(0.5), gamma(1.4);
@@ -90,13 +90,13 @@ int main()
 	/****************************************/
 	roe_II st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
 	int time_order (2);
-	bool CD (true);
+	bool CD (false);
 	st.set_CD(CD);
-	st.set_sens_hllc(false);
+	st.set_sens_hllc(true);
 	time_solver TS(t, T, time_order, M, cfl);
 	
 	st.print_physical(path);
-	TS.solve(st);
+	cout << TS.solve(st) << endl;
 	st.print_physical(path, ios::out | ios::app);
 	
 	return 0;
