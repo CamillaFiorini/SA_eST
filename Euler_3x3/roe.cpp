@@ -398,7 +398,7 @@ void roe::compute_residual(vector<vector<double> >& R) const
 			{
 				if(i < N)
 				{
-					R[k][i] += max(lambda1, 0.0)*(UL[3] - UL_star[k]) + max(lambda2, 0.0)*(UL_star[k]-UR_star[k]) + max(lambda3,0.0)*(UR_star[k]-UR[k]);
+					R[k][i] += max(lambda1, 0.0)*(UL[k] - UL_star[k]) + max(lambda2, 0.0)*(UL_star[k]-UR_star[k]) + max(lambda3,0.0)*(UR_star[k]-UR[k]);
 				}
 				
 				if(i > 0)
