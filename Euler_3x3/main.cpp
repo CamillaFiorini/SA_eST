@@ -16,7 +16,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-4), T(0.1), t(0);
+	double xa(0), xb(1), dx(1e-3), T(0.1), t(0);
 	//int n_print(5/(100*dx));
 	string path = "results/";
 	//string path = "../../results/Euler_3x3_conv/second_order/Diff_HLLC/dx1e-2/";
@@ -33,7 +33,7 @@ int main()
 	vector<double> s_p0(N,s_pR);
 	cout.precision(15);
 	
-	for (int k=0; k < N*x_c; ++k)
+	for (int k=0; k < N*(x_c-xa)/(xb-xa); ++k)
 	{
 		u0[k] = uL;
 		rho0[k] = rhoL;
@@ -90,9 +90,9 @@ int main()
 	/****************************************/
 	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
 	int time_order (1);
-	bool CD (false);
+	bool CD (true);
 	st.set_CD(CD);
-	st.set_sens_hllc(true);
+	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);
 	
 	st.print_physical(path);
