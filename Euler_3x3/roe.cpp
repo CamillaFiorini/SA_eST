@@ -382,12 +382,14 @@ void roe::compute_residual(vector<vector<double> >& R) const
 			{
 				if(i < N)
 				{
-					R[k][i] += max(lambda1, 0.0)*UL[k]*(fabs(sigma[i])<1e-10) + (max(lambda2, sigma[i])-max(lambda1, sigma[i]))*UL_star[k] + (max(lambda3,sigma[i])-max(lambda2, sigma[i]))*UR_star[k] - max(lambda3,sigma[i])*UR[k];
+					R[k][i] += max(lambda1-sigma[i], 0.0)*UL[k] + (max(lambda2 - sigma[i], 0.0)-max(lambda1 - sigma[i], 0.0))*UL_star[k] + (max(lambda3 - sigma[i], 0.0)-max(lambda2 - sigma[i], 0.0))*UR_star[k] - max(lambda3, sigma[i])*UR[k];
+					//max(lambda1, 0.0)*UL[k]*(fabs(sigma[i])<1e-10) + (max(lambda2, sigma[i])-max(lambda1, sigma[i]))*UL_star[k] + (max(lambda3,sigma[i])-max(lambda2, sigma[i]))*UR_star[k] - max(lambda3,sigma[i])*UR[k];
 				}
 				
 				if(i > 0)
 				{
-					R[k][i-1] += min(lambda1, sigma[i])*UL[k] + (min(lambda2, sigma[i]) - min(lambda1, sigma[i]))*UL_star[k] + (min(lambda3,sigma[i])-min(lambda2, sigma[i]))*UR_star[k] - min(lambda3, 0.0)*UR[k]*(fabs(sigma[i])<1e-10);
+					R[k][i-1] += min(lambda1, sigma[i])*UL[k] + (min(lambda2 - sigma[i], 0.0) - min(lambda1 - sigma[i], 0.0))*UL_star[k] + (min(lambda3- sigma[i], 0.0)-min(lambda2 - sigma[i], 0.0))*UR_star[k] - min(lambda3 - sigma[i], 0.0)*UR[k];
+					//min(lambda1, sigma[i])*UL[k] + (min(lambda2, sigma[i]) - min(lambda1, sigma[i]))*UL_star[k] + (min(lambda3,sigma[i])-min(lambda2, sigma[i]))*UR_star[k] - min(lambda3, 0.0)*UR[k]*(fabs(sigma[i])<1e-10);
 				}
 			}
 		}
