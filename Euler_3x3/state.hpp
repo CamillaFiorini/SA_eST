@@ -18,10 +18,13 @@ protected:
 	bool CD;
 	vector<double> sigma;
 	int D;
+	bool bc;
+	vector<double> UL_inf;
+	vector<double> UR_inf;
 public:
 	// Constructors
 	state()=default;
-	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), D(u.size()) {};
+	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), D(u.size()), bc(false) {};
 	state(const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, double, bool=false);
 	virtual ~state() = default;
 	
@@ -39,6 +42,7 @@ public:
 	inline bool get_CD() const {return CD;};
 	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
 	inline void get_sigma(vector<double>& s) {s = sigma;};
+	inline void set_bc(const vector<double>& UL, const vector<double>& UR) {bc = true; UL_inf = UL; UR_inf = UR;};
 	void print_conservative(const string&, ios_base::openmode mode = ios_base::out, int = 15);
 	void print_physical(const string&, ios_base::openmode mode = ios_base::out, int = 15);
 	
