@@ -16,11 +16,8 @@ void roe::compute_lambda1(vector<double>& l) const
 
 double roe::compute_lambda1(const vector<double>& UL, const vector<double>& UR) const
 {
-	double utilde = (UL[1]/sqrt(UL[0]) + UR[1]/sqrt(UR[0]))/( sqrt(UL[0]) + sqrt(UR[0]) );
-	double HL = UL[2]/UL[0] + ((gamma-1)*(UL[2] - 0.5*UL[1]*UL[1]/UL[0]))/UL[0];
-	double HR = UR[2]/UR[0] + ((gamma-1)*(UR[2] - 0.5*UR[1]*UR[1]/UR[0]))/UR[0];
-	double Htilde = (sqrt(UL[0])*HL + sqrt(UR[0])*HR)/(sqrt(UL[0]) + sqrt(UR[0]));
-	double atilde = sqrt((gamma-1)*(Htilde - 0.5*utilde*utilde));
+	double utilde = this->compute_utilde(UL, UR);
+	double atilde = this->compute_atilde(UL, UR);
 	return utilde - atilde;
 };
 
@@ -40,7 +37,7 @@ void roe::compute_lambda2(vector<double>& l) const
 
 double roe::compute_lambda2(const vector<double>& UL, const vector<double>& UR) const
 {
-	return (UL[1]/sqrt(UL[0]) + UR[1]/sqrt(UR[0]))/( sqrt(UL[0]) + sqrt(UR[0]) );
+	return this->compute_utilde(UL, UR);
 };
 
 void roe::compute_lambda3(vector<double>& l) const
@@ -59,11 +56,8 @@ void roe::compute_lambda3(vector<double>& l) const
 
 double roe::compute_lambda3(const vector<double>& UL, const vector<double>& UR) const
 {
-	double utilde = (UL[1]/sqrt(UL[0]) + UR[1]/sqrt(UR[0]))/( sqrt(UL[0]) + sqrt(UR[0]) );
-	double HL = UL[2]/UL[0] + ((gamma-1)*(UL[2] - 0.5*UL[1]*UL[1]/UL[0]))/UL[0];
-	double HR = UR[2]/UR[0] + ((gamma-1)*(UR[2] - 0.5*UR[1]*UR[1]/UR[0]))/UR[0];
-	double Htilde = (sqrt(UL[0])*HL + sqrt(UR[0])*HR)/(sqrt(UL[0]) + sqrt(UR[0]));
-	double atilde = sqrt((gamma-1)*(Htilde - 0.5*utilde*utilde));
+	double utilde = this->compute_utilde(UL, UR);
+	double atilde = this->compute_atilde(UL, UR);
 	return utilde + atilde;
 };
 
@@ -165,7 +159,6 @@ void roe::compute_alpha_tilde(const vector<double>& UL, const vector<double>& UR
 						+ 0.5/atilde*( (UR[3] - UL[3])*(utilde+atilde) + (UR[0] - UL[0])*(s_utilde+s_atilde) - (UR[4] - UL[4]) - s_atilde*alpha_tilde[1] - atilde*alpha_tilde[4] );
 	
 	alpha_tilde[5] = (UR[3] - UL[3]) - (alpha_tilde[3] + alpha_tilde[4]);
-	
 	return;
 };
 
@@ -325,7 +318,8 @@ void roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vec
 	r3[3] = 0;
 	r3[4] = s_utilde + s_atilde;
 	r3[5] = s_Htilde + s_utilde*atilde + utilde*s_atilde;
-	
+	//if(i > 90 && i < 110)
+	//	cout << "alpha_tilde[0] = " << alpha_tilde[0] << "\talpha_tilde[1] = " << alpha_tilde[1] << "\talpha_tilde[2] = " << alpha_tilde[2] << endl;
 	for (int k = 0; k < D/2; ++k)
 	{
 		UL_star[k] = UL[k] + alpha_tilde[0]*r1[k];
@@ -402,13 +396,31 @@ void roe::compute_residual(vector<vector<double> >& R) const
 				{
 					R[k][i] += max(lambda1, 0.0)*(UL[k] - UL_star[k]) + max(lambda2, 0.0)*(UL_star[k]-UR_star[k]) + max(lambda3,0.0)*(UR_star[k]-UR[k]);
 				}
-				
 				if(i > 0)
 				{
 					R[k][i-1] -= min(lambda1, 0.0)*(UL_star[k] - UL[k]) + min(lambda2, 0.0)*(UR_star[k] - UL_star[k]) + min(lambda3,0.0)*(UR[k] - UR_star[k]);
 				}
 			}
 		}
+		
+		// adding (dx(h))(P-F)
+		vector<double> Ui, Fi;
+		this->get_U(Ui,i);
+		if(i < N)
+		{
+			double p = (gamma-1)*(U[2][i] - 0.5*U[1][i]*U[1][i]/U[0][i]);
+			this->flux(Ui,Fi);
+			R[0][i] += -Fi[0]*delta_h[i]/h[i];
+			R[1][i] += (p - Fi[1])*delta_h[i]/h[i];
+			R[2][i] += -Fi[2]*delta_h[i]/h[i];
+		}
 	}
+/*	for (int i = 90; i < 110; ++i)
+	{
+		cout << R[0][i] << endl;
+		cout << R[1][i] << endl;
+		cout << R[2][i] << endl << endl;
+	}
+	cout << endl; */
 	return;
 };

@@ -14,7 +14,7 @@ protected:
 public:
 	// Constructors
 	roe_II(vector<vector<double> > u, double g) : roe(u,g), kappa(1./3.) {};
-	roe_II(vector<double>a, vector<double>b, vector<double>c, vector<double>d, vector<double>e, vector<double>f, double g) : roe(a,b,c,d,e,f,g), kappa(1./3.) {};
+	roe_II(vector<double>a, vector<double>b, vector<double>c, vector<double>d, vector<double>e, vector<double>f, double g,vector<double>h, vector<double>dh) : roe(a,b,c,d,e,f,g,h,dh), kappa(1./3.) {};
 	~roe_II() = default;
 	// Methods
 	void set_k(double k) {kappa=k;};

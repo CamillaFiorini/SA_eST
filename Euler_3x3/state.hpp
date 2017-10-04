@@ -21,11 +21,13 @@ protected:
 	bool bc;
 	vector<double> UL_inf;
 	vector<double> UR_inf;
+	vector<double> h;
+	vector<double> delta_h;
 public:
 	// Constructors
 	state()=default;
-	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), D(u.size()), bc(false) {};
-	state(const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, double, bool=false);
+	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), D(u.size()), bc(false) {h.assign(U[0].size(),1.);};
+	state(const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, double, const vector<double>&, const vector<double>&, bool=false);
 	virtual ~state() = default;
 	
 	// Set and get members
@@ -43,6 +45,8 @@ public:
 	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
 	inline void get_sigma(vector<double>& s) {s = sigma;};
 	inline void set_bc(const vector<double>& UL, const vector<double>& UR) {bc = true; UL_inf = UL; UR_inf = UR;};
+	inline void set_h(const vector<double>& H) {h = H;};
+	inline void set_dh(const vector<double>& dH) {delta_h = dH;};
 	void print_conservative(const string&, ios_base::openmode mode = ios_base::out, int = 15);
 	void print_physical(const string&, ios_base::openmode mode = ios_base::out, int = 15);
 	

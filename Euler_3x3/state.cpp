@@ -1,6 +1,6 @@
 #include"state.hpp"
 
-state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, bool c)
+state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, const vector<double>& H, const vector<double>& delta_H, bool c)
 {
 	D = 6;
 	U.resize(D);
@@ -10,6 +10,8 @@ state::state(const vector<double>& rho, const vector<double>& u, const vector<do
 	U[0] = rho;
 	U[3] = s_rho;
 	gamma = g;
+	h = H;
+	delta_h = delta_H;
 	for (unsigned int i = 0; i < rho.size(); ++i)
 	{
 		U[1][i] = rho[i]*u[i];

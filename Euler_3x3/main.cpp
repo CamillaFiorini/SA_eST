@@ -16,7 +16,7 @@ using namespace std;
 
 int main()
 {
-	double xa(0), xb(1), dx(1e-3), T(0.1), t(0);
+	double xa(0), xb(1), dx(5e-3), T(0.1), t(0);
 	//int n_print(5/(100*dx));
 	string path = "results/";
 	//string path = "../../results/Euler_3x3_conv/second_order/Diff_HLLC/dx1e-2/";
@@ -31,6 +31,15 @@ int main()
 	vector<double> s_u0(N, s_uR);
 	vector<double> s_rho0(N,s_rhoR);
 	vector<double> s_p0(N,s_pR);
+	vector<double> h(N, 1.), dh(N,0.);
+	double pi(4*atan(1)), x, L(0.25);
+	for (int i = 0; i < N; ++i)
+	{
+		x = 0.5*dx + i*dx;
+		h[i] = 2. - (sin((x-x_c)/L*pi - 0.5*pi)*sin((x-x_c)/L*pi - 0.5*pi))*(x>x_c-L/2.)*(x<x_c+L/2.);//2-exp(-(x-x_c)*(x-x_c)/0.004);
+		dh[i] = //-2*dx*sin((x-x_c)/L*pi - 0.5*pi)*cos((x-x_c)/L*pi - 0.5*pi)*pi/L*(x>x_c-L/2.)*(x<x_c+L/2.);
+		(sin((dx*i-x_c)/L*pi - 0.5*pi)*sin((dx*i-x_c)/L*pi - 0.5*pi))*(dx*i>x_c-L/2.)*(dx*i<x_c+L/2.) - (sin((dx*(i+1)-x_c)/L*pi - 0.5*pi)*sin((dx*(i+1)-x_c)/L*pi - 0.5*pi))*(dx*(i+1)>x_c-L/2.)*(dx*(i+1)<x_c+L/2.);
+	}
 	cout.precision(15);
 	
 	for (int k=0; k < N*(x_c-xa)/(xb-xa); ++k)
@@ -88,9 +97,9 @@ int main()
 	}
 	cout << "End of restoring\n"; */
 	/****************************************/
-	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma);
+	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
 	int time_order (1);
-	bool CD (true);
+	bool CD (false);
 	st.set_CD(CD);
 	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);
