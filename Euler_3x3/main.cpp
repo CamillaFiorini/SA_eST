@@ -17,7 +17,7 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(5e-3), T(5), t(0), cfl(0.5);
+	double xa(0), xb(1), dx(5e-3), T(6), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
 	string path = "results/"; //string path = "../../results/Euler_3x3_conv/second_order/Diff_HLLC/dx1e-2/";
 	int N = M.get_N();
@@ -98,7 +98,7 @@ int main()
 	st.set_bc_L(VL, bc_L);
 	st.set_bc_R(VR, bc_R);
 	int time_order (1);
-	bool CD (false);
+	bool CD (true);
 	st.set_CD(CD);
 	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);

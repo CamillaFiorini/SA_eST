@@ -34,7 +34,10 @@ void roe_I::get_UL_extrapolated (vector<double>& UL, int i) const
 			p = W[2];
 		
 		UL[0] = (p/(gamma-1)+p_tot)/H;
-		UL[1] = sqrt(2*UL[0]*(p_tot-p));
+		if (p_tot > p)
+			UL[1] = sqrt(2*UL[0]*(p_tot-p));
+		else
+			UL[1] = 0;
 		UL[2] = p/(gamma-1)+p_tot-p;
 	}
 	return;

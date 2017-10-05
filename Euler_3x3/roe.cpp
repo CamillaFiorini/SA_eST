@@ -331,6 +331,25 @@ void roe::compute_residual(vector<vector<double> >& R) const
 					}
 				}
 			}
+			if(transonic_raref == 1) //left transonic raref
+			{
+				vector<double> WL, WL_star;
+				this->conservative2physical(UL, WL);
+				this->conservative2physical(UL_star, WL_star);
+				double lambda1L = WL[1] - sqrt(gamma*WL[2]/WL[0]);
+				double lambda1L_star = WL_star[1] - sqrt(gamma*WL_star[2]/WL_star[0]);
+				for (int k = 0; k < D; ++k)
+				{
+					if(i < N)
+					{
+						R[k][i] += lambda1L_star*(U_SL[k] - UL_star[k]) + lambda[1]*(UL_star[k]-UR_star[k]) + lambda[2]*(UR_star[k]-UR[k]);
+					}
+					if(i > 0)
+					{
+						R[k][i-1] -= lambda1L*(U_SL[k] - UL[k]);
+					}
+				}
+			}
 		}
 		else
 		{

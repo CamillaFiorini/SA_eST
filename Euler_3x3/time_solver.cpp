@@ -20,9 +20,9 @@ double time_solver::solve (state& st)
 		}
 		++cont;
 		vector<int> d1, d3, c;
-		st.detector_s1(d1, dx);
-		st.detector_s3(d3, dx);
-		st.detector_c(c, dx);
+		st.detector_s1(d1, 4*dx);
+		st.detector_s3(d3, 4*dx);
+		st.detector_c(c, 4*dx);
 		
 		int N(st.get_size()), D(st.get_dimension());
 		/***** CD *****/
