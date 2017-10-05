@@ -7,6 +7,7 @@
 #include<string>
 #include<fstream>
 #include<omp.h>
+#include"utilities.hpp"
 
 using namespace std;
 
@@ -39,6 +40,8 @@ public:
 	void get_U(vector<double>& u, int i) const;
 	void get_W(vector<vector<double> >& a) const;
 	void get_W(vector<double>& a, int) const;
+	void physical2conservative(const vector<double>&, vector<double>&) const;
+	void conservative2physical(const vector<double>&, vector<double>&) const;
 	double compute_H(const vector<double>&) const;
 	double compute_s_H(const vector<double>&) const;
 	void flux(const vector<double>&, vector<double>&) const;

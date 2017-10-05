@@ -13,9 +13,10 @@ void roe_I::get_UL_extrapolated (vector<double>& UL, int i) const
 	}
 	else
 	{
-		vector<double> W; //physical variables interior cell = (rho, u, p)
+		vector<double> Ui, W; //physical variables interior cell = (rho, u, p)
 		this->get_W(W,0);
-		double H = VL_inf[0]; //W[2]/((gamma-1)*W[0])+0.5*W[1]*W[1] + W[2]/W[0];
+		this->get_U(Ui,0);
+		double H = VL_inf[0]; //this->compute_H(Ui);
 		double p_tot = VL_inf[1]; //W[2]+0.5*W[0]*W[1]*W[1];
 		double p = W[2]; //VL_inf[2];
 		UL[0] = (p/(gamma-1)+p_tot)/H;
@@ -40,17 +41,15 @@ void roe_I::get_UR_extrapolated (vector<double>& UR, int i) const
 	}
 	else
 	{
-		vector<double> W; //physical variables interior cell
+		vector<double> Ui, W; //conservative and physical variables interior cell
 		this->get_W(W,N-1);
-		double H = W[2]/((gamma-1)*W[0])+0.5*W[1]*W[1] + W[2]/W[0]; //VR_inf[0];
+		this->get_U(Ui,N-1);
+		double H = this->compute_H(Ui); //VR_inf[0];
 		double p_tot = W[2]+0.5*W[0]*W[1]*W[1]; //VR_inf[1];
 		double p =  VR_inf[2]; // W[2];
 		UR[0] = (p/(gamma-1)+p_tot)/H;
 		UR[1] = sqrt(2*UR[0]*(p_tot-p));
 		UR[2] = p/(gamma-1)+p_tot-p;
-/*		cout << "U[0][N-1] = " << U[0][N-1] << "\t(p/(gamma-1)+p_tot)/H = " << (p/(gamma-1)+p_tot)/H << endl;
-		cout << "U[1][N-1] = " << U[1][N-1] << "\tsqrt(2*UR[0]*(p_tot-p)) = " << sqrt(2*UR[0]*(p_tot-p)) << endl;
-		cout << "U[2][N-1] = " << U[2][N-1] << "\tp/(gamma-1)+p_tot-p = " << p/(gamma-1)+p_tot-p << endl;
-*/	}
+	}
 	return;
 };

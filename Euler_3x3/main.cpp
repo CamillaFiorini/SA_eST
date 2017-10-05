@@ -44,8 +44,8 @@ int main()
 */	/***************************************/
 
 	/*** Initial and Boundary Conditions ***/
-	double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25); // IC isentropic transonic
-	//double rho_init(1.5), u_init(0.730296743340221), p_init(1.6); // IC transonic with shock
+	//double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25); // IC isentropic transonic
+	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6); // IC transonic with shock
 	double s_rho_init(0), s_u_init(0), s_p_init(0);
 	double gamma(1.4);
 	double H_L(4), p_tot_L(2), p_L(0);

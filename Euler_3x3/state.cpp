@@ -59,6 +59,30 @@ void state::get_W(vector<double>& a, int k) const
 	
 	return;
 };
+
+void state::physical2conservative(const vector<double>& W, vector<double>& U_output) const
+{
+	U_output.resize(6);
+	U_output[0] = W[0];
+	U_output[1] = W[0]*W[1];
+	U_output[2] = 0.5*W[0]*W[1]*W[1] + W[2]/(gamma-1);
+	U_output[3] = W[3];
+	U_output[4] = W[3]*W[1] + W[0]*W[4];
+	U_output[5] = 0.5*W[3]*W[1]*W[1] + W[0]*W[1]*W[4] + W[5]/(gamma-1);
+	return;
+};
+void state::conservative2physical(const vector<double>& U_input, vector<double>& W) const
+{
+	W.resize(6);
+	W[0] = U_input[0];
+	W[1] = U_input[1]/U_input[0]; // u = u*rho/rho
+	W[2] = (gamma-1)*(U_input[2] - 0.5*U_input[1]*U_input[1]/U_input[0]); // p = (gamma-1)(E - 0.5(rho*u)^2/rho) = (gamma-1)(E - 0.5rho*u^2)
+	W[3] = U_input[3];
+	W[4] = (U_input[4] - U_input[3]*W[1])/U_input[0];
+	W[5] = (gamma-1)*(U_input[5]-0.5*U_input[3]*W[1]*W[1] - U_input[1]*W[4]);
+	return;
+};
+
 double state::compute_H(const vector<double>& V) const
 {
 	return V[2]/V[0] + ((gamma-1)*(V[2] - 0.5*V[1]*V[1]/V[0]))/V[0];

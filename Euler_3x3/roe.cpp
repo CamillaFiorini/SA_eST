@@ -169,7 +169,6 @@ int roe::detector_c(const vector<double>& UL, const vector<double>& UR, double t
 	return 0;
 };
 
-
 void roe::detector_s1(vector<int>& d1, double threshold) const
 {
 	int N = U[0].size();
@@ -255,29 +254,20 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 		UL_star[k] = UL[k] + alpha_tilde[0]*r1[k];
 		UR_star[k] = UR[k] - alpha_tilde[2]*r3[k];
 	}
-	// Checking for transonic rarefactions
-	double lambda1L = UL[1]/UL[0] - sqrt(gamma*((gamma-1)*(UL[2]-0.5*UL[1]*UL[1]/UL[0]))/UL[0]);
-	double lambda1L_star = UL_star[1]/UL_star[0] - sqrt(gamma*((gamma-1)*(UL_star[2]-0.5*UL_star[1]*UL_star[1]/UL_star[0]))/UL_star[0]);
-	double lambda3R = UR[1]/UR[0] + sqrt(gamma*((gamma-1)*(UR[2]-0.5*UR[1]*UR[1]/UR[0]))/UR[0]);
-	double lambda3R_star = UR_star[1]/UR_star[0] + sqrt(gamma*((gamma-1)*(UL_star[2]-0.5*UL_star[1]*UL_star[1]/UL_star[0]))/UL_star[0]);
+	// Checking for left transonic rarefactions
+	vector<double> WL, WL_star;
+	this->conservative2physical(UL, WL);
+	this->conservative2physical(UL_star, WL_star);
+	double lambda1L = WL[1] - sqrt(gamma*WL[2]/WL[0]);
+	double lambda1L_star = WL_star[1] - sqrt(gamma*WL_star[2]/WL_star[0]);
 	//left transonic rarefaction: entropy fix
 	if(lambda1L < 0 && lambda1L_star > 0)
 	{
 		transonic_raref = 1;
-//		cout << "Interface " << i << endl;
-//		cout << "lambda1L = " << lambda1L << "\tlambda1L_star = " << lambda1L_star << "\tlambda[0] = " << lambda[0] << "\tlambda[1] = " << lambda[1] << "\tlambda[2] = " << lambda[2] << endl;
 		for (int k = 0; k < D; ++k)
 		{
 			U_SL[k] = ((lambda[0]-lambda1L)*UL[k] + (lambda1L_star-lambda[0])*UL_star[k])/(lambda1L_star-lambda1L);
-	//		if(k < D/2)
-	//			cout << "UL_star[" << k << "] = " << UL_star[k] << "\tU_SL[" << k << "] = " << U_SL[k] << endl;
 		}
-	}
-	//right transonic rarefaction: entropy fix
-	if(lambda3R_star < 0 && lambda3R > 0)
-	{
-		transonic_raref = 2;
-		lambda[2] = lambda3R*(lambda[2] - lambda3R_star)/(lambda3R - lambda3R_star);
 	}
 	for (int k = 0; k < D/2; ++k)
 	{
