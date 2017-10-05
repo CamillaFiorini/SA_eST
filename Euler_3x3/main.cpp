@@ -59,8 +59,8 @@ int main()
 	double gamma(1.4);
 	double H_L(4), p_tot_L(2), p_L(0);
 	double H_R(0), p_tot_R(0), p_R(1.6);
-	double s_H_L, s_p_tot_L, s_p_L;
-	double s_H_R, s_p_tot_R, s_p_R;
+	double s_H_L(1), s_p_tot_L(0), s_p_L(0);
+	double s_H_R(0), s_p_tot_R(0), s_p_R(0);
 	vector<double> u0(N, u_init);
 	vector<double> rho0(N, rho_init);
 	vector<double> p0(N, p_init);
@@ -98,7 +98,7 @@ int main()
 	st.set_bc_L(VL, bc_L);
 	st.set_bc_R(VR, bc_R);
 	int time_order (1);
-	bool CD (true);
+	bool CD (false);
 	st.set_CD(CD);
 	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);
