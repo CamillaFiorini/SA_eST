@@ -298,7 +298,6 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 		UR_star[4] = b5/atilde - UL_star[4];
 		UR_star[5] = b6/atilde - UL_star[5];
 	}
-
 	return transonic_raref;
 };
 
@@ -351,8 +350,11 @@ void roe::compute_residual(vector<vector<double> >& R) const
 			}
 			if(transonic_raref == 1) //left transonic raref
 			{
-				double lambda1L = UL[1]/UL[0] - sqrt(gamma*((gamma-1)*(UL[2]-0.5*UL[1]*UL[1]/UL[0]))/UL[0]);
-				double lambda1L_star = UL_star[1]/UL_star[0] - sqrt(gamma*((gamma-1)*(UL_star[2]-0.5*UL_star[1]*UL_star[1]/UL_star[0]))/UL_star[0]);
+				vector<double> WL, WL_star;
+				this->conservative2physical(UL, WL);
+				this->conservative2physical(UL_star, WL_star);
+				double lambda1L = WL[1] - sqrt(gamma*WL[2]/WL[0]);
+				double lambda1L_star = WL_star[1] - sqrt(gamma*WL_star[2]/WL_star[0]);
 				for (int k = 0; k < D; ++k)
 				{
 					if(i < N)

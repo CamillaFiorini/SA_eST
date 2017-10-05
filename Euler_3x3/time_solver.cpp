@@ -42,7 +42,6 @@ double time_solver::solve (state& st)
 			first_time = false;
 		}
 		/**********************/
-		
 		if (order == 2)
 		{
 			if (CD)
@@ -164,7 +163,6 @@ double time_solver::solve (state& st)
 					x_bar[i] = dx*i + sigma[i]*dt;
 				}
 				/********************************/
-
 				st.set_sigma(sigma);
 				st.compute_residual(R);
 				/********* compute U_bar ********/

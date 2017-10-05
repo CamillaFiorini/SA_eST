@@ -44,8 +44,17 @@ int main()
 */	/***************************************/
 
 	/*** Initial and Boundary Conditions ***/
-	//double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25); // IC isentropic transonic
-	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6); // IC transonic with shock
+	vector<bool> bc_L(3, false), bc_R(3, false);
+	/*** Isentropic transonic ***/
+/*	double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25);
+	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
+	bc_R[0] = false; bc_R[1] = false; bc_R[2] = false;
+*/	/****************************/
+	/*** Transonic with shock ***/
+	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
+	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
+	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
+	/****************************/
 	double s_rho_init(0), s_u_init(0), s_p_init(0);
 	double gamma(1.4);
 	double H_L(4), p_tot_L(2), p_L(0);
@@ -72,7 +81,7 @@ int main()
 	VR[4] = s_p_tot_R;
 	VR[5] = s_p_R;
 	/***************************************/
-	
+
 	/************ h definition *************/
 	vector<double> h(N, 1.), dh(N,0.);
 	double pi(4*atan(1)), x, xc(0.5), L(0.5);
@@ -86,14 +95,13 @@ int main()
 	/***************************************/
 	
 	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
-	st.set_bc_L(VL);
-//	st.set_bc_R(VR);
+	st.set_bc_L(VL, bc_L);
+	st.set_bc_R(VR, bc_R);
 	int time_order (1);
 	bool CD (false);
 	st.set_CD(CD);
 	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);
-	
 	st.print_physical(path);
 	cout << TS.solve(st) << endl;
 	st.print_physical(path, ios::out | ios::app);

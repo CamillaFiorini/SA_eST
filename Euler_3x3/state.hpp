@@ -19,8 +19,8 @@ protected:
 	bool CD;
 	vector<double> sigma;
 	int D;
-	bool bc_L;
-	bool bc_R;
+	vector<bool> bc_L;
+	vector<bool> bc_R;
 	vector<double> VL_inf; // H, p_tot, p
 	vector<double> VR_inf; // H, p_tot, p
 	vector<double> h;
@@ -51,8 +51,8 @@ public:
 	inline bool get_CD() const {return CD;};
 	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
 	inline void get_sigma(vector<double>& s) {s = sigma;};
-	inline void set_bc_L(const vector<double>& v) {bc_L = true; VL_inf = v;};
-	inline void set_bc_R(const vector<double>& v) {bc_R = true; VR_inf = v;};
+	inline void set_bc_L(const vector<double>& v, const vector<bool>& bc) {bc_L = bc; VL_inf = v;};
+	inline void set_bc_R(const vector<double>& v, const vector<bool>& bc) {bc_R = bc; VR_inf = v;};
 	inline void set_h(const vector<double>& H) {h = H;};
 	inline void set_dh(const vector<double>& dH) {delta_h = dH;};
 	void print_conservative(const string&, ios_base::openmode mode = ios_base::out, int = 15);
