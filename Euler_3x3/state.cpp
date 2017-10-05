@@ -20,7 +20,8 @@ state::state(const vector<double>& rho, const vector<double>& u, const vector<do
 		U[5][i] = 0.5*s_rho[i]*u[i]*u[i] + rho[i]*u[i]*s_u[i] + s_p[i]/(gamma-1);
 	}
 	CD = c;
-	bc = false;
+	bc_L = false;
+	bc_R = false;
 };
 
 // get conservative variables
@@ -45,6 +46,20 @@ void state::get_W(vector<vector<double> >& a) const
 	}
 	return;
 };
+
+void state::get_W(vector<double>& a, int k) const
+{
+	a.resize(D);
+	a[0] = U[0][k];
+	a[1] = U[1][k]/U[0][k]; // u = u*rho/rho
+	a[2] = (gamma-1)*(U[2][k] - 0.5*U[1][k]*U[1][k]/U[0][k]); // p = (gamma-1)(E - 0.5(rho*u)^2/rho) = (gamma-1)(E - 0.5rho*u^2)
+	a[3] = U[3][k];
+	a[4] = (U[4][k] - U[3][k]*a[1])/U[0][k]; // s_u =
+	a[5] = (gamma-1)*(U[5][k]-0.5*U[3][k]*a[1]*a[1] - U[1][k]*a[4]); //s_p = (gamma-1)(s_E - 0.5*s_rho*u^2 - rho*u*s_u)
+	
+	return;
+};
+
 
 void state::flux(const vector<double>& u, vector<double>& F) const
 {

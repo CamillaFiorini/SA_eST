@@ -13,7 +13,7 @@ double time_solver::solve (state& st)
 	
 	while (t < end_time)
 	{
-		if (cont%5000==0)
+		if (cont%5==0)
 		{
 			cout << t << endl;
 			st.print_physical("", ios::out | ios::app);

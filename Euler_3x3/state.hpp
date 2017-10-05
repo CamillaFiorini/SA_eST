@@ -18,15 +18,16 @@ protected:
 	bool CD;
 	vector<double> sigma;
 	int D;
-	bool bc;
-	vector<double> UL_inf;
-	vector<double> UR_inf;
+	bool bc_L;
+	bool bc_R;
+	vector<double> VL_inf; // H, p_tot, p
+	vector<double> VR_inf; // H, p_tot, p
 	vector<double> h;
 	vector<double> delta_h;
 public:
 	// Constructors
 	state()=default;
-	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), D(u.size()), bc(false) {h.assign(U[0].size(),1.);};
+	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), D(u.size()), bc_L(false), bc_R(false) {h.assign(U[0].size(),1.);};
 	state(const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, double, const vector<double>&, const vector<double>&, bool=false);
 	virtual ~state() = default;
 	
@@ -37,6 +38,7 @@ public:
 	inline void get_U(vector<vector<double> >& u) const {u=U;return;};
 	void get_U(vector<double>& u, int i) const;
 	void get_W(vector<vector<double> >& a) const;
+	void get_W(vector<double>& a, int) const;
 	void flux(const vector<double>&, vector<double>&) const;
 	inline void set_gamma(const double g) {gamma = g; return;};
 	inline double get_gamma() const {return gamma;};
@@ -44,7 +46,8 @@ public:
 	inline bool get_CD() const {return CD;};
 	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
 	inline void get_sigma(vector<double>& s) {s = sigma;};
-	inline void set_bc(const vector<double>& UL, const vector<double>& UR) {bc = true; UL_inf = UL; UR_inf = UR;};
+	inline void set_bc_L(const vector<double>& v) {bc_L = true; VL_inf = v;};
+	inline void set_bc_R(const vector<double>& v) {bc_R = true; VR_inf = v;};
 	inline void set_h(const vector<double>& H) {h = H;};
 	inline void set_dh(const vector<double>& dH) {delta_h = dH;};
 	void print_conservative(const string&, ios_base::openmode mode = ios_base::out, int = 15);

@@ -46,3 +46,50 @@ void can(const int & n, double & an)
 	
  for (int k = 0; k < 31; k++) { an = an + bin[k]*(pow(2.,0 - k - 1)); }
 }
+
+/********** Restoring ***************/
+/*	t = 0.0114115027477935;
+	ifstream if_rho ("rho_int.txt");
+	ifstream if_p ("p_int.txt");
+	ifstream if_u ("u_int.txt");
+	ifstream if_s_rho ("s_rho_int.txt");
+	ifstream if_s_p ("s_p_int.txt");
+	ifstream if_s_u ("s_u_int.txt");
+	double dummy; int k(0);
+	while(if_rho >> dummy)
+	{
+ rho0[k] = dummy;
+ ++k;
+	}
+	k = 0;
+	while(if_p >> dummy)
+	{
+ p0[k] = dummy;
+ ++k;
+	}
+	k = 0;
+	while(if_u >> dummy)
+	{
+ u0[k] = dummy;
+ ++k;
+	}
+	k = 0;
+	while(if_s_rho >> dummy)
+	{
+ s_rho0[k] = dummy;
+ ++k;
+	}
+	k = 0;
+	while(if_s_p >> dummy)
+	{
+ s_p0[k] = dummy;
+ ++k;
+	}
+	k = 0;
+	while(if_s_u >> dummy)
+	{
+ s_u0[k] = dummy;
+ ++k;
+	}
+	cout << "End of restoring\n"; */
+/****************************************/

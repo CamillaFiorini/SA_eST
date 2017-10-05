@@ -18,23 +18,6 @@ void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 	int left = max(i-1,0);
 	int Lleft = max(i-2, 0);
 	int right = min(i, N-1);
-	/*
-	vector<double> rL(D), irL(D);
-	
-	for (int k = 0; k < D; ++k)
-	{
-		if (fabs(U[k][left]-U[k][Lleft]) < 1e-15 || fabs(U[k][right]-U[k][left]) < 1e-15)
-		{
-			rL[k] = 0;
-			irL[k] = 0;
-		}
-		else
-		{
-			rL[k] = (U[k][right]-U[k][left])/(U[k][left]-U[k][Lleft]);
-			irL[k] = 1./rL[k];
-		}
-		UL[k] = U[k][left] +( this->psi(rL[k])*(1-kappa)/4*(U[k][left] - U[k][Lleft]) + this->psi(irL[k])*(1+kappa)/4*(U[k][right] - U[k][left]));
-	}*/
 	for (int k = 0; k < D; ++k)
 	{
 		double a = U[k][right] - U[k][left];
@@ -56,33 +39,15 @@ void roe_II::get_UR_extrapolated (vector<double>& UR, int i) const
 	int left = max(i-1,0);
 	int right = min(i, N-1);
 	int Rright = min(i+1, N-1);
-	/*
-	vector<double> rR(D), irR(D);
-	
 	for (int k = 0; k < D; ++k)
 	{
-		if (fabs(U[k][Rright]-U[k][right]) < 1e-15 || fabs((U[k][right]-U[k][left])) < 1e-15)
-		{
-			irR[k] = 0;
-			rR[k] = 0;
-		}
-		else
-		{
-			rR[k] = (U[k][right]-U[k][left])/(U[k][Rright]-U[k][right]);
-			irR[k] = 1./rR[k];
-		}
-		UR[k] = U[k][right] +1.*(- this->psi(irR[k])*(1+kappa)/4*(U[k][right] - U[k][left]) - this->psi(rR[k])*(1-kappa)/4*(U[k][Rright] - U[k][right]));
-	}
-	*/
-	 for (int k = 0; k < D; ++k)
-	 {
 		double a = U[k][Rright] - U[k][right];
 		double b = U[k][right] - U[k][left];
 		if (a*b < 1e-10 )
 			UR[k] = U[k][right];
 		else
 			UR[k] = U[k][right] - 0.5*fabs(a)/a*min(fabs(a), fabs(b));
-	 }
+	}
 	return;
 };
 
@@ -92,7 +57,7 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 	R.resize(D);
 	for (int k = 0; k < D; ++k)
 		R[k].assign(N,0);
-	vector<double> UL(D), UR(D), F(D/2), UL_star(D), UR_star(D), s_ULstar(D/2), s_URstar(D/2), UL_cell(D), UR_cell(D), s_ULstar_cell(D/2), s_URstar_cell(D/2), UL_star_cell(D),UR_star_cell(D);
+	vector<double> UL(D), UR(D), F(D/2), UL_star(D), UR_star(D), U_SL(D), U_SR(D), s_ULstar(D/2), s_URstar(D/2), UL_cell(D), UR_cell(D), s_ULstar_cell(D/2), s_URstar_cell(D/2), UL_star_cell(D),UR_star_cell(D);
 	for (int i = 0; i < N+1; ++i)
 	{
 		this->get_UL_extrapolated(UL, i);
@@ -100,10 +65,10 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 		double lambda1 = this->compute_lambda1(UL, UR);
 		double lambda2 = this->compute_lambda2(UL, UR);
 		double lambda3 = this->compute_lambda3(UL, UR);
-		
+		vector<double> lambda;
 		if(CD)
 		{
-			this->compute_U_star(UL, UR, UL_star, UR_star);
+			this->compute_U_star(UL, UR, UL_star, UR_star, lambda, U_SL, U_SR);
 			for (int k = 0; k < D; ++k)
 			{
 				if(i < N)
@@ -119,7 +84,8 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 			if(i > 0)
 			{
 				UR_cell = UL;
-				this->compute_U_star(UL_cell, UR_cell, UL_star_cell, UR_star_cell);
+				vector<double> lambda_cell, U_SL_cell, U_SR_cell;
+				this->compute_U_star(UL_cell, UR_cell, UL_star_cell, UR_star_cell, lambda_cell, U_SL_cell, U_SR_cell);
 				double lambda1_cell = this->compute_lambda1(UL_cell, UR_cell);
 				double lambda2_cell = this->compute_lambda2(UL_cell, UR_cell);
 				double lambda3_cell = this->compute_lambda3(UL_cell, UR_cell);
@@ -130,7 +96,7 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 		}
 		else
 		{
-			this->compute_U_star(UL, UR, UL_star, UR_star);
+			this->compute_U_star(UL, UR, UL_star, UR_star, lambda, U_SL, U_SR);
 			for (int k = 0; k < D; ++k)
 			{
 				if(i < N)
@@ -146,7 +112,8 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 			if(i > 0)
 			{
 				UR_cell = UL;
-				this->compute_U_star(UL_cell, UR_cell, UL_star_cell, UR_star_cell);
+				vector<double> lambda_cell, U_SL_cell, U_SR_cell;
+				this->compute_U_star(UL_cell, UR_cell, UL_star_cell, UR_star_cell, lambda_cell, U_SL_cell, U_SR_cell);
 				double lambda1_cell = this->compute_lambda1(UL_cell, UR_cell);
 				double lambda2_cell = this->compute_lambda2(UL_cell, UR_cell);
 				double lambda3_cell = this->compute_lambda3(UL_cell, UR_cell);
