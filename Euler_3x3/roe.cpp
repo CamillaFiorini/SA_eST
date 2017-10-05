@@ -91,20 +91,6 @@ double roe::compute_s_utilde(const vector<double>& UL, const vector<double>& UR)
 	return 0.5*UR[3]*uR/sqrt(UR[0])/(sqrt(UR[0])+sqrt(UL[0])) + 0.5*UL[3]*uL/sqrt(UL[0])/(sqrt(UR[0])+sqrt(UL[0])) + (sqrt(UR[0])*s_uR + sqrt(UL[0])*s_uL)/(sqrt(UR[0])+sqrt(UL[0])) - u_tilde/(sqrt(UR[0])+sqrt(UL[0]))*(0.5*UR[3]/sqrt(UR[0]) + 0.5*UL[3]/sqrt(UL[0]));
 };
 
-
-double roe::compute_H(const vector<double>& V) const
-{
-	return V[2]/V[0] + ((gamma-1)*(V[2] - 0.5*V[1]*V[1]/V[0]))/V[0];
-};
-
-double roe::compute_s_H(const vector<double>& V) const
-{
-	double H = this->compute_H(V);
-	double s_u = V[4]/V[0] - V[3]*V[1]/(V[0]*V[0]);
-	double s_p = (gamma-1)*(V[5] - 0.5*V[3]*V[1]*V[1]/V[0]/V[0] - V[1]*s_u);
-	return (V[5] + s_p)/V[0] - V[3]/V[0]*H;
-};
-
 double roe::compute_Htilde(const vector<double>& UL, const vector<double>& UR) const
 {
 	double HL = this->compute_H(UL);

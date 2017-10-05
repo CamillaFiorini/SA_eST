@@ -27,8 +27,6 @@ public:
 	double compute_maxvel() const;
 	double compute_utilde(const vector<double>&, const vector<double>&) const;
 	double compute_s_utilde(const vector<double>&, const vector<double>&) const;
-	double compute_H(const vector<double>&) const;
-	double compute_s_H(const vector<double>&) const;
 	double compute_Htilde(const vector<double>& UL, const vector<double>& UR) const;
 	double compute_s_Htilde(const vector<double>& UL, const vector<double>& UR) const;
 	double compute_atilde(const vector<double>&, const vector<double>&) const;

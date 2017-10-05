@@ -46,7 +46,7 @@ void state::get_W(vector<vector<double> >& a) const
 	}
 	return;
 };
-
+// get physical variables in cell k
 void state::get_W(vector<double>& a, int k) const
 {
 	a.resize(D);
@@ -59,8 +59,20 @@ void state::get_W(vector<double>& a, int k) const
 	
 	return;
 };
+double state::compute_H(const vector<double>& V) const
+{
+	return V[2]/V[0] + ((gamma-1)*(V[2] - 0.5*V[1]*V[1]/V[0]))/V[0];
+};
 
+double state::compute_s_H(const vector<double>& V) const
+{
+	double H = this->compute_H(V);
+	double s_u = V[4]/V[0] - V[3]*V[1]/(V[0]*V[0]);
+	double s_p = (gamma-1)*(V[5] - 0.5*V[3]*V[1]*V[1]/V[0]/V[0] - V[1]*s_u);
+	return (V[5] + s_p)/V[0] - V[3]/V[0]*H;
+};
 
+// compute physical flux from conservative variables U
 void state::flux(const vector<double>& u, vector<double>& F) const
 {
 	F.resize(u.size());

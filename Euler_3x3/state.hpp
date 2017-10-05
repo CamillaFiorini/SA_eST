@@ -39,6 +39,8 @@ public:
 	void get_U(vector<double>& u, int i) const;
 	void get_W(vector<vector<double> >& a) const;
 	void get_W(vector<double>& a, int) const;
+	double compute_H(const vector<double>&) const;
+	double compute_s_H(const vector<double>&) const;
 	void flux(const vector<double>&, vector<double>&) const;
 	inline void set_gamma(const double g) {gamma = g; return;};
 	inline double get_gamma() const {return gamma;};
