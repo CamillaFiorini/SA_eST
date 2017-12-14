@@ -5,4 +5,4 @@ results
 *.txt
 *.m
 *.dat
-*akefile
+Makefile
