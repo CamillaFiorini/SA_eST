@@ -17,14 +17,14 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(5e-3), T(6), t(0), cfl(0.5);
+	double xa(0), xb(1), dx(1e-4), T(25), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
-	string path = "results/"; //string path = "../../results/Euler_3x3_conv/second_order/Diff_HLLC/dx1e-2/";
+	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
 	int N = M.get_N();
 	/***************************************/
 	
 	/************* Shock tube **************/
-/*	double uL(0.75), uR(0), rhoL(1), rhoR(0.125), pL(1), pR(0.1), x_c(0.5), gamma(1.4);
+/*	double uL(0.75), uR(0), rhoL(1), rhoR(0.125), pL(1.0), pR(0.1), x_c(0.5), gamma(1.4);
 	double s_uL(0), s_uR(0), s_rhoL(0), s_rhoR(0), s_pL(1), s_pR(0);
 	vector<double> u0(N, uR);
 	vector<double> rho0(N, rhoR);
@@ -45,20 +45,26 @@ int main()
 
 	/*** Initial and Boundary Conditions ***/
 	vector<bool> bc_L(3, false), bc_R(3, false);
+	vector<double> VL(6), VR(6); // V = [H, p_tot, p]
 	/*** Isentropic transonic ***/
-/*	double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25);
+	double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = false;
-*/	/****************************/
+	/****************************/
 	/*** Transonic with shock ***/
-	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
+/*	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
-	/****************************/
+*/	/****************************/
+	/********* Subsonic *********/
+/*	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
+	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
+	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
+*/	/****************************/
 	double s_rho_init(0), s_u_init(0), s_p_init(0);
 	double gamma(1.4);
-	double H_L(4), p_tot_L(2), p_L(0);
-	double H_R(0), p_tot_R(0), p_R(1.6);
+	double H_L(4.0), p_tot_L(2), p_L(0);
+	double H_R(0), p_tot_R(0), p_R(p_init);
 	double s_H_L(1), s_p_tot_L(0), s_p_L(0);
 	double s_H_R(0), s_p_tot_R(0), s_p_R(0);
 	vector<double> u0(N, u_init);
@@ -67,7 +73,6 @@ int main()
 	vector<double> s_u0(N, s_u_init);
 	vector<double> s_rho0(N,s_rho_init);
 	vector<double> s_p0(N,s_p_init);
-	vector<double> VL(6), VR(6); // V = [H, p_tot, p]
 	VL[0] = H_L;
 	VL[1] = p_tot_L;
 	VL[2] = p_L;
@@ -103,7 +108,7 @@ int main()
 	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);
 	st.print_physical(path);
-	cout << TS.solve(st) << endl;
+	cerr << TS.solve(st) << endl;
 	st.print_physical(path, ios::out | ios::app);
 	
 	return 0;

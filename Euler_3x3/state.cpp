@@ -55,7 +55,7 @@ void state::get_W(vector<double>& a, int k) const
 	a[2] = (gamma-1)*(U[2][k] - 0.5*U[1][k]*U[1][k]/U[0][k]); // p = (gamma-1)(E - 0.5(rho*u)^2/rho) = (gamma-1)(E - 0.5rho*u^2)
 	a[3] = U[3][k];
 	a[4] = (U[4][k] - U[3][k]*a[1])/U[0][k]; // s_u =
-	a[5] = (gamma-1)*(U[5][k]-0.5*U[3][k]*a[1]*a[1] - U[1][k]*a[4]); //s_p = (gamma-1)(s_E - 0.5*s_rho*u^2 - rho*u*s_u)
+	a[5] = (gamma-1)*(U[5][k]-0.5*U[3][k]*a[1]*a[1] - U[1][k]*a[4]); //s_p = (gamma-1)(s_rhoE - 0.5*s_rho*u^2 - rho*u*s_u)
 	
 	return;
 };

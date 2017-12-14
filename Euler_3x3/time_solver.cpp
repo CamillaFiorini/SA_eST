@@ -1,4 +1,5 @@
 #include"time_solver.hpp"
+#include <algorithm>
 
 double time_solver::solve (state& st)
 {
@@ -10,21 +11,26 @@ double time_solver::solve (state& st)
 	st.get_U(Uold);
 	st.get_U(U);
 	bool CD = st.get_CD();
-	
-	while (t < end_time)
+	int N(st.get_size()), D(st.get_dimension());
+	bool stationary (false);
+	vector<double> maxR(D, 0);
+
+	while (t < end_time && !stationary)
 	{
-		if (cont%5==0)
+		if (cont%5000==0)
 		{
 			cout << t << endl;
+			cerr << t << endl;
 			st.print_physical("", ios::out | ios::app);
 		}
+		maxR.assign(D, 0);
+
 		++cont;
 		vector<int> d1, d3, c;
 		st.detector_s1(d1, 4*dx);
 		st.detector_s3(d3, 4*dx);
 		st.detector_c(c, 4*dx);
 		
-		int N(st.get_size()), D(st.get_dimension());
 		/***** CD *****/
 		vector<double> x_bar(N+1,0), sigma(N+1,0);
 		x_bar[0] = this->m.get_xa(); x_bar[N] = this->m.get_xb();
@@ -79,7 +85,7 @@ double time_solver::solve (state& st)
 						dxi = (x_bar[i+1]-x_bar[i]);
 						coeff = (dx-dxi)/dxi;
 					}
-					for (int k = 0; k < 6; ++k)
+					for (int k = 0; k < D; ++k)
 						U_int[k][i] = Uold[k][i] + coeff*Uold[k][i] + 0.5*dt/dxi*R[k][i];
 				}
 				/********************************/
@@ -100,7 +106,7 @@ double time_solver::solve (state& st)
 						dxi = (x_bar[i+1]-x_bar[i]);
 						coeff = (dx-dxi)/dxi;
 					}
-					for (int k = 0; k < 6; ++k)
+					for (int k = 0; k < D; ++k)
 						U_bar[k][i] = Uold[k][i] + coeff*U_int[k][i] + dt/dxi*R[k][i];
 				}
 				/********************************/
@@ -111,7 +117,7 @@ double time_solver::solve (state& st)
 				
 				for (int i=0; i<N; ++i)
 				{
-					for (int k=0; k<6; ++k)
+					for (int k=0; k<D; ++k)
 					{
 						if (an < dt/dx*max(0.0, sigma[i]))
 							U[k][i] = U_bar[k][i-1];
@@ -130,13 +136,13 @@ double time_solver::solve (state& st)
 			{
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
-					for (int k=0; k<6; ++k)
+					for (int k=0; k<D; ++k)
 						U_int[k][i] = Uold[k][i] + 0.5*dt/dx*R[k][i];
 				
 				st.set_U(U_int);
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
-					for (int k=0; k<6; ++k)
+					for (int k=0; k<D; ++k)
 						U[k][i] = Uold[k][i] + dt/dx*R[k][i];
 			}
 		}
@@ -169,7 +175,7 @@ double time_solver::solve (state& st)
 				for (int i=0; i<N; ++i)
 				{
 					double dxi = (x_bar[i+1]-x_bar[i]);
-					for (int k = 0; k < 6; ++k)
+					for (int k = 0; k < D; ++k)
 						U_bar[k][i] = dx/dxi*Uold[k][i] + dt/dxi*R[k][i];
 				}
 				/********************************/
@@ -180,7 +186,7 @@ double time_solver::solve (state& st)
 				
 				for (int i=0; i<N; ++i)
 				{
-					for (int k=0; k<6; ++k)
+					for (int k=0; k<D; ++k)
 					{
 						if (an < dt/dx*max(0.0, sigma[i]))
 							U[k][i] = U_bar[k][i-1];
@@ -199,13 +205,25 @@ double time_solver::solve (state& st)
 			{
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
-					for (int k=0; k<6; ++k)
+					for (int k=0; k<D; ++k)
 						U[k][i] = Uold[k][i] + dt/dx*R[k][i];
 			}
 		}
 		Uold = U;
 		st.set_U(U);
 		t += dt;
+		for (int k=0; k<D; ++k)
+		{
+			for (int i=0; i<N; ++i)
+			{
+				if(fabs(R[k][i]) > maxR[k])
+					maxR[k] = fabs(R[k][i]);
+			}
+		}
+		if(*max_element(maxR.begin(), maxR.end())/dx < 1e-10)
+		{
+			stationary = true;
+		}
 	}
 	return t;
 

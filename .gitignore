@@ -4,3 +4,5 @@ main
 results
 *.txt
 *.m
+*.dat
+*akefile
