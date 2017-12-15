@@ -17,9 +17,12 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(1e-4), T(25), t(0), cfl(0.5);
+	double xa(0), xb(1), dx(1e-4), T(25), t(0), cfl(0.9);
 	mesh M (xa, xb, dx);
-	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
+	string path = "results/isen_tran/ref/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
+	double da(0);
+	ofstream file_da(path+"da.dat");
+	file_da << da << endl;
 	int N = M.get_N();
 	/***************************************/
 	
@@ -63,7 +66,7 @@ int main()
 */	/****************************/
 	double s_rho_init(0), s_u_init(0), s_p_init(0);
 	double gamma(1.4);
-	double H_L(4.0), p_tot_L(2), p_L(0);
+	double H_L(4.0+da), p_tot_L(2), p_L(0);
 	double H_R(0), p_tot_R(0), p_R(p_init);
 	double s_H_L(1), s_p_tot_L(0), s_p_L(0);
 	double s_H_R(0), s_p_tot_R(0), s_p_R(0);
@@ -99,10 +102,10 @@ int main()
 	}
 	/***************************************/
 	
-	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
+	roe_II st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
 	st.set_bc_L(VL, bc_L);
 	st.set_bc_R(VR, bc_R);
-	int time_order (1);
+	int time_order (2);
 	bool CD (false);
 	st.set_CD(CD);
 	st.set_sens_hllc(false);
