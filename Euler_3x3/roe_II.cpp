@@ -60,6 +60,7 @@ void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 	if(i == 0) // at the first interface I impose the value outside the domain
 	{
 		UL[0] = (p/(gamma-1)+p_tot)/H;
+		UL[3] = (s_p/(gamma-1)+s_p_tot)/H - UL[0]*s_H/H;
 		if (p_tot > p)
 		{
 			UL[1] = sqrt(2*UL[0]*(p_tot-p));
@@ -70,14 +71,15 @@ void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 			UL[1] = 0;
 			UL[4] = 0;
 		}
-		UL[2] = p/(gamma-1)+p_tot-p;
-		UL[3] = (s_p/(gamma-1)+s_p_tot)/H - UL[0]*s_H/H;
-		UL[5] = s_p/(gamma-1)+s_p_tot-s_p;
+		UL[2] = p/(gamma-1)+0.5*UL[1]*UL[1]/UL[0];
+		UL[5] = s_p/(gamma-1)+UL[1]*UL[4]/UL[0]-0.5*UL[3]*UL[1]*UL[1]/UL[0]/UL[0];
 	}
+	
 	if(i == 1) // at the second interface I use the value outside the domain as a Lleft value
 	{
 		vector<double> ULleft(D);
 		ULleft[0] = (p/(gamma-1)+p_tot)/H;
+		ULleft[3] = (s_p/(gamma-1)+s_p_tot)/H - ULleft[0]*s_H/H;
 		if (p_tot > p)
 		{
 			ULleft[1] = sqrt(2*ULleft[0]*(p_tot-p));
@@ -88,9 +90,8 @@ void roe_II::get_UL_extrapolated (vector<double>& UL, int i) const
 			ULleft[1] = 0;
 			ULleft[4] = 0;
 		}
-		ULleft[2] = p/(gamma-1)+p_tot-p;
-		ULleft[3] = (s_p/(gamma-1)+s_p_tot)/H - ULleft[0]*s_H/H;
-		ULleft[5] = s_p/(gamma-1)+s_p_tot-s_p;
+		ULleft[2] = p/(gamma-1)+0.5*ULleft[1]*ULleft[1]/ULleft[0];
+		ULleft[5] = s_p/(gamma-1)+ULleft[1]*ULleft[4]/ULleft[0]-0.5*ULleft[3]*ULleft[1]*ULleft[1]/ULleft[0]/ULleft[0];
 		
 		for (int k = 0; k < D; ++k)
 		{
