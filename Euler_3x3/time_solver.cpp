@@ -17,9 +17,9 @@ double time_solver::solve (state& st)
 
 	while (t < end_time && !stationary)
 	{
-		if (cont%5000==0)
+		if (cont%10000==0)
 		{
-			cout << t << endl;
+			//cout << t << endl;
 			cerr << t << endl;
 			st.print_physical("", ios::out | ios::app);
 		}

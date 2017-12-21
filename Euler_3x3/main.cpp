@@ -17,9 +17,9 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(1e-4), T(25), t(0), cfl(0.9);
+	double xa(0), xb(1), dx(1e-3), T(100), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
-	string path = "results/isen_tran/ref/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
+	string path = "results/isen_tran/cfl05/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
 	double da(0);
 	ofstream file_da(path+"da.dat");
 	file_da << da << endl;

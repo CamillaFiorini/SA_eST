@@ -220,7 +220,7 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 	U_SR.resize(D);
 		
 	vector<double> r1(D), r3(D), alpha_tilde(D), S(D/2);
-	int d1(this->detector_s1(UL, UR, 1e-1)), d3(this->detector_s3(UL, UR, 1e-1));
+	int d1(this->detector_s1(UL, UR, 1e-3)), d3(this->detector_s3(UL, UR, 1e-3));
 	this->compute_alpha_tilde(UL, UR, alpha_tilde);
 	
 	double utilde = this->compute_utilde(UL, UR);
@@ -273,7 +273,7 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 	}
 	for (int k = 0; k < D/2; ++k)
 	{
-		S[k] = 0/*(s_utilde - s_atilde)*(UL_star[k] - UL[k])*d1 + s_utilde*(UR_star[k] - UL_star[k]) + (s_utilde + s_atilde)*(UR[k] - UR_star[k])*d3*/;
+		S[k] = (s_utilde - s_atilde)*(UL_star[k] - UL[k])*d1 + s_utilde*(UR_star[k] - UL_star[k]) + (s_utilde + s_atilde)*(UR[k] - UR_star[k])*d3;
 		if (!sens_hllc)
 		{
 			UR_star[k+3] = 1.0/(lambda[2]-lambda[0])*(lambda[2]*UR[k+3] - lambda[0]*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
