@@ -19,7 +19,7 @@ int main()
 	/********* Domain definition ***********/
 	double xa(0), xb(1), dx(1e-3), T(100), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
-	string path = "results/isen_tran/cfl05/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
+	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
 	double da(0);
 	ofstream file_da(path+"da.dat");
 	file_da << da << endl;
@@ -50,15 +50,15 @@ int main()
 	vector<bool> bc_L(3, false), bc_R(3, false);
 	vector<double> VL(6), VR(6); // V = [H, p_tot, p]
 	/*** Isentropic transonic ***/
-	double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25);
+/*	double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = false;
-	/****************************/
+*/	/****************************/
 	/*** Transonic with shock ***/
-/*	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
+	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
-*/	/****************************/
+	/****************************/
 	/********* Subsonic *********/
 /*	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
@@ -102,10 +102,10 @@ int main()
 	}
 	/***************************************/
 	
-	roe_II st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
+	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
 	st.set_bc_L(VL, bc_L);
 	st.set_bc_R(VR, bc_R);
-	int time_order (2);
+	int time_order (1);
 	bool CD (false);
 	st.set_CD(CD);
 	st.set_sens_hllc(false);

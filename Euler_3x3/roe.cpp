@@ -220,7 +220,7 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 	U_SR.resize(D);
 		
 	vector<double> r1(D), r3(D), alpha_tilde(D), S(D/2);
-	int d1(this->detector_s1(UL, UR, 1e-3)), d3(this->detector_s3(UL, UR, 1e-3));
+	int d1(this->detector_s1(UL, UR, 4e-3)), d3(this->detector_s3(UL, UR, 4e-3));
 	this->compute_alpha_tilde(UL, UR, alpha_tilde);
 	
 	double utilde = this->compute_utilde(UL, UR);
