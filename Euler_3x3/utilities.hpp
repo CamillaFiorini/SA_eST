@@ -18,4 +18,5 @@ using namespace std;
 void cmax(const int & n, int & maxa);
 void cbin(const int & n, int bin[]);
 void can(const int & n, double & an);
+double L2dot(const vector<double>&, const vector<double>&, double);
 #endif /* utilities_hpp */

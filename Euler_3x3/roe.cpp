@@ -401,9 +401,9 @@ void roe::compute_residual(vector<vector<double> >& R) const
 			R[0][i] += -Fi[0]*delta_h[i]/h[i];
 			R[1][i] += (p - Fi[1])*delta_h[i]/h[i];
 			R[2][i] += -Fi[2]*delta_h[i]/h[i];
-			R[3][i] += -Fi[3]*delta_h[i]/h[i];
-			R[4][i] += (s_p - Fi[4])*delta_h[i]/h[i];
-			R[5][i] += -Fi[5]*delta_h[i]/h[i];
+			R[3][i] += -Fi[3]*delta_h[i]/h[i] - Fi[0]*(delta_s_h[i]/h[i] - s_h[i]*delta_h[i]/h[i]/h[i]);
+			R[4][i] += (s_p - Fi[4])*delta_h[i]/h[i] + (p - Fi[1])*(delta_s_h[i]/h[i] - s_h[i]*delta_h[i]/h[i]/h[i]);
+			R[5][i] += -Fi[5]*delta_h[i]/h[i] - Fi[2]*(delta_s_h[i]/h[i] - s_h[i]*delta_h[i]/h[i]/h[i]);
 		}
 	}
 	return;

@@ -47,6 +47,14 @@ void can(const int & n, double & an)
  for (int k = 0; k < 31; k++) { an = an + bin[k]*(pow(2.,0 - k - 1)); }
 }
 
+double L2dot(const vector<double>& f1, const vector<double>& f2, double dx)
+{
+	double res = 0;
+	for (unsigned int i = 0; i < f1.size(); ++i)
+		res += f1[i]*f2[i]*dx;
+	return res;
+};
+
 /********** Restoring ***************/
 /*	t = 0.0114115027477935;
 	ifstream if_rho ("rho_int.txt");

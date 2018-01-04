@@ -13,8 +13,9 @@ private:
 	bool sens_hllc;
 public:
 	// Constructors
-	roe(vector<vector<double> > u, double g) : state(u,g), sens_hllc(false) {};
-	roe(vector<double>a, vector<double>b, vector<double>c, vector<double>d, vector<double>e, vector<double>f, double g, vector<double>h, vector<double> dh) : state(a,b,c,d,e,f,g,h,dh), sens_hllc(false) {};
+	roe(const vector<vector<double> >& u, double g) : state(u,g), sens_hllc(false) {};
+	roe(const vector<double>&a, const vector<double>& b, const vector<double>& c, const vector<double>& d, const vector<double>& e, const vector<double>& f, double g,const vector<double>& h, const vector<double>& dh) : state(a,b,c,d,e,f,g,h,dh), sens_hllc(false) {};
+	roe(const vector<double>&a, const vector<double>& b, const vector<double>& c, const vector<double>& d, const vector<double>& e, const vector<double>& f, double g,const vector<double>& h, const vector<double>& dh, const vector<double>& sh, const vector<double>& dsh) : state(a,b,c,d,e,f,g,h,dh,sh,dsh), sens_hllc(false) {};
 	// Methods
 	inline void set_sens_hllc(bool c) {sens_hllc = c;};
 	inline bool get_sens_hllc() {return sens_hllc;};

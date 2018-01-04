@@ -1,6 +1,6 @@
 #include"state.hpp"
 
-state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, const vector<double>& H, const vector<double>& delta_H, bool c)
+state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, const vector<double>& H, const vector<double>& delta_H, const vector<double>& S_H, const vector<double>& delta_S_H, bool c)
 {
 	D = 6;
 	U.resize(D);
@@ -12,6 +12,34 @@ state::state(const vector<double>& rho, const vector<double>& u, const vector<do
 	gamma = g;
 	h = H;
 	delta_h = delta_H;
+	s_h = S_H;
+	delta_s_h = delta_S_H;
+	for (unsigned int i = 0; i < rho.size(); ++i)
+	{
+		U[1][i] = rho[i]*u[i];
+		U[2][i] = 0.5*rho[i]*u[i]*u[i] + p[i]/(gamma-1);
+		U[4][i] = s_rho[i]*u[i] + rho[i]*s_u[i];
+		U[5][i] = 0.5*s_rho[i]*u[i]*u[i] + rho[i]*u[i]*s_u[i] + s_p[i]/(gamma-1);
+	}
+	CD = c;
+	bc_L.assign(3,false);
+	bc_R.assign(3,false);
+};
+
+state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, const vector<double>& H, const vector<double>& delta_H, bool c)
+{
+	D = 6;
+	U.resize(D);
+	for (int k = 0; k < D; ++k)
+		U[k].resize(rho.size());
+	
+	U[0] = rho;
+	U[3] = s_rho;
+	gamma = g;
+	h = H;
+	delta_h = delta_H;
+	s_h.assign(rho.size(), 0.);
+	delta_s_h.assign(rho.size(), 0.);
 	for (unsigned int i = 0; i < rho.size(); ++i)
 	{
 		U[1][i] = rho[i]*u[i];

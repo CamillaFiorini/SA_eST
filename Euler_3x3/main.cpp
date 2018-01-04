@@ -68,7 +68,7 @@ int main()
 	double gamma(1.4);
 	double H_L(4.0+da), p_tot_L(2), p_L(0);
 	double H_R(0), p_tot_R(0), p_R(p_init);
-	double s_H_L(1), s_p_tot_L(0), s_p_L(0);
+	double s_H_L(0), s_p_tot_L(0), s_p_L(0);
 	double s_H_R(0), s_p_tot_R(0), s_p_R(0);
 	vector<double> u0(N, u_init);
 	vector<double> rho0(N, rho_init);
@@ -90,19 +90,24 @@ int main()
 	VR[5] = s_p_R;
 	/***************************************/
 
-	/************ h definition *************/
+	/******** h and s_h definition *********/
 	vector<double> h(N, 1.), dh(N,0.);
+	vector<double> h_xc(N, 0.), dh_xc(N,0.);
+	vector<double> h_L(N, 0.), dh_L(N,0.);
 	double pi(4*atan(1)), x, xc(0.5), L(0.5);
 	for (int i = 0; i < N; ++i)
 	{
 		x = 0.5*dx + i*dx;
-		h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);//2-exp(-(x-xc)*(x-xc)/0.004);
-		dh[i] = //-2*dx*sin((x-xc)/L*pi - 0.5*pi)*cos((x-xc)/L*pi - 0.5*pi)*pi/L*(x>xc-L/2.)*(x<xc+L/2.);
-		(sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+		dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 	}
 	/***************************************/
 	
-	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
+	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh, h_L, dh_L);
 	st.set_bc_L(VL, bc_L);
 	st.set_bc_R(VR, bc_R);
 	int time_order (1);

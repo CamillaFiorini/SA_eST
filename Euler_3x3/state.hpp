@@ -25,10 +25,13 @@ protected:
 	vector<double> VR_inf; // H, p_tot, p
 	vector<double> h;
 	vector<double> delta_h;
+	vector<double> s_h;
+	vector<double> delta_s_h;
 public:
 	// Constructors
 	state()=default;
-	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), D(u.size()), bc_L(false), bc_R(false) {h.assign(U[0].size(),1.);};
+	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), D(u.size()), bc_L(false), bc_R(false) {h.assign(U[0].size(),1.); delta_h.assign(U[0].size(),0.); s_h.assign(U[0].size(),0.); delta_s_h.assign(U[0].size(),0.);};
+	state(const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, double, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, bool=false);
 	state(const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, double, const vector<double>&, const vector<double>&, bool=false);
 	virtual ~state() = default;
 	
@@ -55,6 +58,8 @@ public:
 	inline void set_bc_R(const vector<double>& v, const vector<bool>& bc) {bc_R = bc; VR_inf = v;};
 	inline void set_h(const vector<double>& H) {h = H;};
 	inline void set_dh(const vector<double>& dH) {delta_h = dH;};
+	inline void set_sh(const vector<double>& H) {s_h = H;};
+	inline void set_dsh(const vector<double>& dH) {delta_s_h = dH;};
 	void print_conservative(const string&, ios_base::openmode mode = ios_base::out, int = 15);
 	void print_physical(const string&, ios_base::openmode mode = ios_base::out, int = 15);
 	
