@@ -1,7 +1,7 @@
 #include"time_solver.hpp"
 #include <algorithm>
 
-double time_solver::solve (state& st)
+double time_solver::solve (state& st, bool only_state)
 {
 	bool first_time (true);
 	int cont(0);
@@ -12,6 +12,7 @@ double time_solver::solve (state& st)
 	st.get_U(U);
 	bool CD = st.get_CD();
 	int N(st.get_size()), D(st.get_dimension());
+	if (only_state) D = 3;
 	bool stationary (false);
 	vector<double> maxR(D, 0);
 

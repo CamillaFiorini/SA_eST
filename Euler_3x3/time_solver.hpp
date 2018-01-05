@@ -22,6 +22,6 @@ public:
 	inline void set_cfl(double c) {cfl = c; return;};
 	inline double get_cfl() const {return cfl;};
 	
-	double solve(state&);
+	double solve(state&, bool=false);
 };
 #endif

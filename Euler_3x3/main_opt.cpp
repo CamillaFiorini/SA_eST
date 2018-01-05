@@ -21,9 +21,8 @@ int main()
 	double xa(0), xb(1), dx(1e-3), T(100), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
 	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
-	double da(0);
-	ofstream file_da(path+"da.dat");
-	file_da << da << endl;
+	ofstream fout_param(path+"param.dat");
+	ofstream fout_J(path+"J.dat");
 	int N = M.get_N();
 	/***************************************/
 	
@@ -67,7 +66,7 @@ int main()
 */	/****************************/
 	double s_rho_init(0), s_u_init(0), s_p_init(0);
 	double gamma(1.4);
-	double H_L(4.0+da), p_tot_L(2), p_L(0);
+	double H_L(4.0), p_tot_L(2), p_L(0);
 	double H_R(0), p_tot_R(0), p_R(p_init);
 	double s_H_L(0), s_p_tot_L(0), s_p_L(0);
 	double s_H_R(0), s_p_tot_R(0), s_p_R(0);
@@ -107,12 +106,21 @@ int main()
 		dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 	}
 	/***************************************/
+	
+	/************* OPTIMIZATION ************/
 	int NP = 2;
+	double J(0), J_old(1), coeff(1);
+	vector<double> gradJ(NP), param(NP), param_old(NP);
+	bool stopcrit (false);
+	param[0] = L;
+	param[1] = xc;
+	param_old = param;
 	roe_I st_L(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh, h_L, dh_L);
 	roe_I st_xc(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh, h_xc, dh_xc);
 	vector<roe_I> st;
 	st.push_back(st_L);
 	st.push_back(st_xc);
+	vector<vector<vector<double> > > W(NP);
 	int time_order (1);
 	bool CD (false);
 	time_solver TS(t, T, time_order, M, cfl);
@@ -123,15 +131,124 @@ int main()
 		st[i].set_CD(CD);
 		st[i].set_sens_hllc(false);
 	}
-	#pragma omp parallel default (shared)
-	{
-		int tid = omp_get_thread_num();
-		if(tid < NP)
-		{
-			cout << TS.solve(st[tid]) << endl;
-			st[tid].print_physical(path+to_string(tid)+"_", ios::out | ios::app);
-		}
-	}
+	unsigned int iter1(0), max_iter1(1000), iter2(0), max_iter2(10);
+	double toll = 1e-3;
 	
+	#pragma omp parallel for
+	for(int k = 0; k < NP; ++k)
+	{
+		TS.solve(st[k]);
+		st[k].get_W(W[k]);
+	}
+	J_old = 0.5*L2dot(W[0][2], W[0][2], dx);
+
+	while(!stopcrit && iter1 < max_iter1)
+	{
+		++iter1;
+		coeff = 1;
+		for(int k = 0; k < NP; ++k)
+		{
+			gradJ[k] = L2dot(W[k][2], W[k][5], dx);
+			param[k] = param_old[k] - coeff*gradJ[k];
+		}
+		if(param[0] < 0)
+		{
+			coeff = (param_old[0] - 0.1)/gradJ[0];
+			for(int k = 0; k < NP; ++k)
+				param[k] = param_old[k] - coeff*gradJ[k];
+		}
+		if(param[1] < 0)
+		{
+			coeff = (param_old[1] - 0.1)/gradJ[1];
+			for(int k = 0; k < NP; ++k)
+				param[k] = param_old[k] - coeff*gradJ[k];
+		}
+		if(param[0] > 1)
+		{
+			coeff = (param_old[0] - 0.9)/gradJ[0];
+			for(int k = 0; k < NP; ++k)
+				param[k] = param_old[k] - coeff*gradJ[k];
+		}
+		if(param[1] > 1)
+		{
+			coeff = (param_old[1] - 0.9)/gradJ[1];
+			for(int k = 0; k < NP; ++k)
+				param[k] = param_old[k] - coeff*gradJ[k];
+		}
+		
+		L = param[0];
+		xc = param[1];
+		for (int i = 0; i < N; ++i)
+		{
+			h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+			dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+			h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+			dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+			h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+			dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		}
+		for (int k = 0; k < NP; ++k)
+		{
+			st[k].set_h(h);
+			st[k].set_dh(dh);
+		}
+		st[0].set_sh(h_L);
+		st[0].set_dsh(dh_L);
+		st[1].set_sh(h_xc);
+		st[1].set_dsh(dh_xc);
+		
+		TS.solve(st[0], true);
+		st[0].get_W(W[0]);
+		J = 0.5*L2dot(W[0][2], W[0][2], dx);
+
+		iter2 = 0;
+		while(J >= J_old && iter2 < max_iter2)
+		{
+			++iter2;
+			coeff *= 0.5;
+			for (int k = 0; k < NP; ++k)
+				param[k] = param_old[k] - coeff*gradJ[k];
+			
+			L = param[0];
+			xc = param[1];
+			for (int i = 0; i < N; ++i)
+			{
+				h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+				dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+
+			}
+			st[0].set_h(h);
+			st[0].set_dh(dh);
+			TS.solve(st[0], true);
+			st[0].get_W(W[0]);
+			J = 0.5*L2dot(W[0][2], W[0][2], dx);
+		}
+		
+		stopcrit = fabs(param_old[0]-param[0]) < toll;
+		for (int k = 1; k < NP; ++k)
+			stopcrit = stopcrit && (fabs(param_old[k]-param[k]) < toll);
+		
+		if(J < J_old)
+		{
+			#pragma omp parallel for
+			for(int k = 0; k < NP; ++k)
+			{
+				TS.solve(st[k]);
+				st[k].get_W(W[k]);
+			}
+		}
+		
+		param_old = param;
+		J_old = J;
+		for (int k = 0; k < NP; ++k)
+			fout_param << param[k] << "\t";
+		fout_param << endl;
+		fout_J << J << endl;
+	}
+	for(int k = 0; k < NP; ++k)
+	{
+		st[k].print_physical(path+to_string(k)+"_", ios::out | ios::app);
+	}
+	/***************************************/
 	return 0;
 }
