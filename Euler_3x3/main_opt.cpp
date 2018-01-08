@@ -141,25 +141,24 @@ int main()
 		st[k].get_W(W[k]);
 	}
 	J_old = 0.5*L2dot(W[0][2], W[0][2], dx);
-
+	for (int k = 0; k < NP; ++k)
+        	fout_param << param[k] << "\t";
+        fout_param << endl;
+        fout_J << J_old << endl;
 	while(!stopcrit && iter1 < max_iter1)
 	{
+		cerr << "Iterazione " << iter1 << endl;
 		++iter1;
-		coeff = 1;
+		coeff = 0.2;
 		for(int k = 0; k < NP; ++k)
 		{
 			gradJ[k] = L2dot(W[k][2], W[k][5], dx);
 			param[k] = param_old[k] - coeff*gradJ[k];
 		}
+		cerr << "New param before checking: " << param[0] << " " << param[1] << endl;
 		if(param[0] < 0)
 		{
 			coeff = (param_old[0] - 0.1)/gradJ[0];
-			for(int k = 0; k < NP; ++k)
-				param[k] = param_old[k] - coeff*gradJ[k];
-		}
-		if(param[1] < 0)
-		{
-			coeff = (param_old[1] - 0.1)/gradJ[1];
 			for(int k = 0; k < NP; ++k)
 				param[k] = param_old[k] - coeff*gradJ[k];
 		}
@@ -169,15 +168,22 @@ int main()
 			for(int k = 0; k < NP; ++k)
 				param[k] = param_old[k] - coeff*gradJ[k];
 		}
-		if(param[1] > 1)
+		if(param[1] > 1.-0.5*param[0])
+                {
+                        coeff = (param_old[1] - 1. + 0.5*param[0])/gradJ[1];
+                        for(int k = 0; k < NP; ++k)
+                                param[k] = param_old[k] - coeff*gradJ[k];
+                }
+		if(param[1] < 0.5*param[0])
 		{
-			coeff = (param_old[1] - 0.9)/gradJ[1];
+			coeff = (param_old[1] - 0.5*param[0])/gradJ[1];
 			for(int k = 0; k < NP; ++k)
 				param[k] = param_old[k] - coeff*gradJ[k];
 		}
 		
 		L = param[0];
 		xc = param[1];
+		cerr << "New param after checking the domain: " << param[0] << " " << param[1] << endl;
 		for (int i = 0; i < N; ++i)
 		{
 			h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
@@ -204,6 +210,7 @@ int main()
 		iter2 = 0;
 		while(J >= J_old && iter2 < max_iter2)
 		{
+			cerr << "J has not decreased, coeff is halved for the " << iter2 << "time.\n";
 			++iter2;
 			coeff *= 0.5;
 			for (int k = 0; k < NP; ++k)
@@ -223,7 +230,8 @@ int main()
 			st[0].get_W(W[0]);
 			J = 0.5*L2dot(W[0][2], W[0][2], dx);
 		}
-		
+		if(iter2 == max_iter2)
+			cerr << "Max_iter2 raggiunto.\n";
 		stopcrit = fabs(param_old[0]-param[0]) < toll;
 		for (int k = 1; k < NP; ++k)
 			stopcrit = stopcrit && (fabs(param_old[k]-param[k]) < toll);
