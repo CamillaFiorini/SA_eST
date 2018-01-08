@@ -250,7 +250,8 @@ int main()
 			st[0].set_dsh(dh_L);
 			st[1].set_sh(h_xc);
 			st[1].set_dsh(dh_xc);
-			
+			st[1].set_h(h);
+			st[1].set_dh(dh);			
 			#pragma omp parallel for
 			for(int k = 0; k < NP; ++k)
 			{
