@@ -238,6 +238,19 @@ int main()
 		
 		if(J < J_old)
 		{
+			for (int i = 0; i < N; ++i)
+			{
+				h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+				dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+				h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+				dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+			}
+
+			st[0].set_sh(h_L);
+			st[0].set_dsh(dh_L);
+			st[1].set_sh(h_xc);
+			st[1].set_dsh(dh_xc);
+			
 			#pragma omp parallel for
 			for(int k = 0; k < NP; ++k)
 			{
