@@ -18,7 +18,7 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(1e-3), T(100), t(0), cfl(0.5);
+	double xa(0), xb(1), dx(1e-2), T(100), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
 	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
 	ofstream fout_param(path+"param.dat");
@@ -94,7 +94,7 @@ int main()
 	vector<double> h(N, 1.), dh(N,0.);
 	vector<double> h_xc(N, 0.), dh_xc(N,0.);
 	vector<double> h_L(N, 0.), dh_L(N,0.);
-	double pi(4*atan(1)), x, xc(0.5), L(0.5);
+	double pi(4*atan(1)), x, xc(0.187126), L(0.374252);
 	for (int i = 0; i < N; ++i)
 	{
 		x = 0.5*dx + i*dx;
@@ -124,14 +124,14 @@ int main()
 	int time_order (1);
 	bool CD (false);
 	time_solver TS(t, T, time_order, M, cfl);
-	for (int i = 0; i < NP; ++i)
+	for (int k = 0; k < NP; ++k)
 	{
-		st[i].set_bc_L(VL, bc_L);
-		st[i].set_bc_R(VR, bc_R);
-		st[i].set_CD(CD);
-		st[i].set_sens_hllc(false);
+		st[k].set_bc_L(VL, bc_L);
+		st[k].set_bc_R(VR, bc_R);
+		st[k].set_CD(CD);
+		st[k].set_sens_hllc(false);
 	}
-	unsigned int iter1(0), max_iter1(1000), iter2(0), max_iter2(10);
+	unsigned int iter1(0), max_iter1(1000), iter2(0), max_iter2(20);
 	double toll = 1e-3;
 	
 	#pragma omp parallel for
@@ -140,45 +140,60 @@ int main()
 		TS.solve(st[k]);
 		st[k].get_W(W[k]);
 	}
+	
 	J_old = 0.5*L2dot(W[0][2], W[0][2], dx);
 	for (int k = 0; k < NP; ++k)
-        	fout_param << param[k] << "\t";
-        fout_param << endl;
-        fout_J << J_old << endl;
+		fout_param << param[k] << "\t";
+	fout_param << endl;
+	fout_J << J_old << endl;
+	cout << "J = " << J_old << endl;
 	while(!stopcrit && iter1 < max_iter1)
 	{
-		cerr << "Iterazione " << iter1 << endl;
+		cerr << "Iter " << iter1 << endl;
 		++iter1;
-		coeff = 0.2;
+		coeff = 1;
 		for(int k = 0; k < NP; ++k)
 		{
 			gradJ[k] = L2dot(W[k][2], W[k][5], dx);
 			param[k] = param_old[k] - coeff*gradJ[k];
 		}
+		cerr << "grad_() = ( " << gradJ[0] << ", " << gradJ[1] << ")\n";
 		cerr << "New param before checking: " << param[0] << " " << param[1] << endl;
-		if(param[0] < 0)
+		if(!( param[1] > 0 && param[1] < 1 && param[0] < 2*param[1] && param[0] < 2-2*param[1]))
 		{
-			coeff = (param_old[0] - 0.1)/gradJ[0];
-			for(int k = 0; k < NP; ++k)
-				param[k] = param_old[k] - coeff*gradJ[k];
-		}
-		if(param[0] > 1)
-		{
-			coeff = (param_old[0] - 0.9)/gradJ[0];
-			for(int k = 0; k < NP; ++k)
-				param[k] = param_old[k] - coeff*gradJ[k];
-		}
-		if(param[1] > 1.-0.5*param[0])
-                {
-                        coeff = (param_old[1] - 1. + 0.5*param[0])/gradJ[1];
-                        for(int k = 0; k < NP; ++k)
-                                param[k] = param_old[k] - coeff*gradJ[k];
-                }
-		if(param[1] < 0.5*param[0])
-		{
-			coeff = (param_old[1] - 0.5*param[0])/gradJ[1];
-			for(int k = 0; k < NP; ++k)
-				param[k] = param_old[k] - coeff*gradJ[k];
+			if (param[0] < 0 && param[1] > 0 && param[1] < 1)
+			{
+				param[0] = 0.01; // in teoria 0, da cambiare
+			}
+			if(param[1] > 1 && param[0] < 0.5*param[1]- 0.5)
+			{
+				param[0] = 0.01;
+				param[1] = 1;
+			}
+			if(param[0] > -2*param[1]+2 && param[0] > 0.5*param[1] - 0.5 && param[0] < 0.5*param[1] + 0.75)
+			{
+				param[1] = 4./5. + param[1]/5. - 2*param[0]/5.;
+				param[0] = -2*param[1]+2;
+			}
+			if (param[0] > -0.5*param[1] + 5./4. && param[0] > 0.5*param[1]+3./4.)
+			{
+				param[0] = 1;
+				param[1] = 0.5;
+			}
+			if(param[0] > -0.5*param[1] && param[0] > 2*param[1] && param[0] < -0.5*param[1] + 5./4.)
+			{
+				param[1] = 2*param[0]/5. + param[1]/5.;
+				param[0] = 2*param[1];
+			}
+			if(param[1] < 0 && param[0] < -0.5*param[1])
+			{
+				param[0] = 0.01;
+				param[1] = 0.01;
+			}
+			for (int k = 0; k < NP; ++k)
+			{
+				gradJ[k] = (param_old[k]-param[k])/coeff;
+			}
 		}
 		
 		L = param[0];
@@ -186,6 +201,7 @@ int main()
 		cerr << "New param after checking the domain: " << param[0] << " " << param[1] << endl;
 		for (int i = 0; i < N; ++i)
 		{
+			x = 0.5*dx + i*dx;
 			h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
 			dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 			h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
@@ -210,16 +226,18 @@ int main()
 		iter2 = 0;
 		while(J >= J_old && iter2 < max_iter2)
 		{
-			cerr << "J has not decreased, coeff is halved for the " << iter2 << "time.\n";
+			if(iter2==0) cerr << "Jold = " << J_old << endl;
+			cerr << "J = " << J << " has not decreased, coeff is halved for the " << iter2 << " time. ";
 			++iter2;
 			coeff *= 0.5;
 			for (int k = 0; k < NP; ++k)
 				param[k] = param_old[k] - coeff*gradJ[k];
-			
+			cerr << "Trying with x_c = " << param[1] << ", L = " << param[0] << endl;
 			L = param[0];
 			xc = param[1];
 			for (int i = 0; i < N; ++i)
 			{
+				x = 0.5*dx + i*dx;
 				h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
 				dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 
@@ -235,11 +253,12 @@ int main()
 		stopcrit = fabs(param_old[0]-param[0]) < toll;
 		for (int k = 1; k < NP; ++k)
 			stopcrit = stopcrit && (fabs(param_old[k]-param[k]) < toll);
-		
+		cerr << "After second while, stopcrit = " << stopcrit << endl;
 		if(J < J_old)
 		{
 			for (int i = 0; i < N; ++i)
 			{
+				x = 0.5*dx + i*dx;
 				h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
 				dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 				h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
@@ -266,10 +285,11 @@ int main()
 			fout_param << param[k] << "\t";
 		fout_param << endl;
 		fout_J << J << endl;
+		cout << "With param = (" << xc << ", " << L << ")\t J = " << J << endl;
 	}
 	for(int k = 0; k < NP; ++k)
 	{
-		st[k].print_physical(path+to_string(k)+"_", ios::out | ios::app);
+		st[k].print_physical(path+to_string(k)+"_");
 	}
 	/***************************************/
 	return 0;
