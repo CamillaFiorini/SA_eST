@@ -18,7 +18,7 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(1e-2), T(100), t(0), cfl(0.5);
+	double xa(0), xb(1), dx(1e-3), T(100), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
 	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
 	ofstream fout_param(path+"param.dat");
@@ -63,10 +63,10 @@ int main()
 	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
-	ifstream if_pstar ("sub_p.dat"); vector<double> pstar(N);
+	/*ifstream if_pstar ("sub_p.dat"); vector<double> pstar(N);
 	int k(0);
 	while(if_pstar >> pstar[k])
-		++k;
+		++k;*/
 	/****************************/
 	double s_rho_init(0), s_u_init(0), s_p_init(0);
 	double gamma(1.4);
@@ -98,7 +98,7 @@ int main()
 	vector<double> h(N, 1.), dh(N,0.);
 	vector<double> h_xc(N, 0.), dh_xc(N,0.);
 	vector<double> h_L(N, 0.), dh_L(N,0.);
-	double pi(4*atan(1)), x, xc(0.3), L(0.5);
+	double pi(4*atan(1)), x, xc(0.5), L(0.5);
 	for (int i = 0; i < N; ++i)
 	{
 		x = 0.5*dx + i*dx;
@@ -137,7 +137,32 @@ int main()
 	}
 	unsigned int iter1(0), max_iter1(1000), iter2(0), max_iter2(20);
 	double toll = 1e-3;
+	TS.solve(st[0], true);
+	st[0].get_W(W[0]);
+	vector<double> pstar = W[0][2];
 	
+	param[0] = 0.4;
+	param[1] = 0.4;
+	L = 0.4; xc = 0.4;
+	for (int i = 0; i < N; ++i)
+	{
+		x = 0.5*dx + i*dx;
+		h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+		dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+	}
+	for (int k = 0; k < NP; ++k)
+	{
+		st[k].set_h(h);
+		st[k].set_dh(dh);
+	}
+	st[0].set_sh(h_L);
+	st[0].set_dsh(dh_L);
+	st[1].set_sh(h_xc);
+	st[1].set_dsh(dh_xc);
 	#pragma omp parallel for
 	for(int k = 0; k < NP; ++k)
 	{
