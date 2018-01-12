@@ -55,15 +55,19 @@ int main()
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = false;
 */	/****************************/
 	/*** Transonic with shock ***/
-	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
-	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
-	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
-	/****************************/
-	/********* Subsonic *********/
-/*	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
+/*	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
 */	/****************************/
+	/********* Subsonic *********/
+	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
+	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
+	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
+	ifstream if_pstar ("sub_p.dat"); vector<double> pstar(N);
+	int k(0);
+	while(if_pstar >> pstar[k])
+		++k;
+	/****************************/
 	double s_rho_init(0), s_u_init(0), s_p_init(0);
 	double gamma(1.4);
 	double H_L(4.0), p_tot_L(2), p_L(0);
@@ -94,7 +98,7 @@ int main()
 	vector<double> h(N, 1.), dh(N,0.);
 	vector<double> h_xc(N, 0.), dh_xc(N,0.);
 	vector<double> h_L(N, 0.), dh_L(N,0.);
-	double pi(4*atan(1)), x, xc(0.187126), L(0.374252);
+	double pi(4*atan(1)), x, xc(0.3), L(0.5);
 	for (int i = 0; i < N; ++i)
 	{
 		x = 0.5*dx + i*dx;
@@ -140,8 +144,7 @@ int main()
 		TS.solve(st[k]);
 		st[k].get_W(W[k]);
 	}
-	
-	J_old = 0.5*L2dot(W[0][2], W[0][2], dx);
+	J_old = 0.5*L2dot(W[0][2] - pstar, W[0][2] - pstar, dx);
 	for (int k = 0; k < NP; ++k)
 		fout_param << param[k] << "\t";
 	fout_param << endl;
@@ -154,7 +157,7 @@ int main()
 		coeff = 1;
 		for(int k = 0; k < NP; ++k)
 		{
-			gradJ[k] = L2dot(W[k][2], W[k][5], dx);
+			gradJ[k] = L2dot(W[k][2] - pstar, W[k][5], dx);
 			param[k] = param_old[k] - coeff*gradJ[k];
 		}
 		cerr << "grad_() = ( " << gradJ[0] << ", " << gradJ[1] << ")\n";
@@ -221,13 +224,16 @@ int main()
 		
 		TS.solve(st[0], true);
 		st[0].get_W(W[0]);
-		J = 0.5*L2dot(W[0][2], W[0][2], dx);
+		J = 0.5*L2dot(W[0][2] - pstar, W[0][2] - pstar, dx);
 
 		iter2 = 0;
 		while(J >= J_old && iter2 < max_iter2)
 		{
 			if(iter2==0) cerr << "Jold = " << J_old << endl;
-			cerr << "J = " << J << " has not decreased, coeff is halved for the " << iter2 << " time. ";
+			if(iter2 == 0) cerr << "J = " << J << " has not decreased, coeff is halved for the " << iter2+1 << "st time. ";
+			if(iter2==1) cerr << "J = " << J << " has not decreased, coeff is halved for the " << iter2+1 << "nd time. ";
+			if(iter2==2) cerr << "J = " << J << " has not decreased, coeff is halved for the " << iter2+1 << "rd time. ";
+			if(iter2 > 2) cerr << "J = " << J << " has not decreased, coeff is halved for the " << iter2+1 << "th time. ";
 			++iter2;
 			coeff *= 0.5;
 			for (int k = 0; k < NP; ++k)
@@ -246,7 +252,7 @@ int main()
 			st[0].set_dh(dh);
 			TS.solve(st[0], true);
 			st[0].get_W(W[0]);
-			J = 0.5*L2dot(W[0][2], W[0][2], dx);
+			J = 0.5*L2dot(W[0][2]-pstar, W[0][2]-pstar, dx);
 		}
 		if(iter2 == max_iter2)
 			cerr << "Max_iter2 raggiunto.\n";
