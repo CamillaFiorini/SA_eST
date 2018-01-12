@@ -107,10 +107,12 @@ int main()
 	roe_I st_pstar(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
 	st_pstar.set_bc_L(VL, bc_L);
 	st_pstar.set_bc_R(VR, bc_R);
-	time_solver TS(t, T, time_order, M, cfl);
 	int time_order (1);
 	bool CD (false);
-	TS.solve(st, true);
+	time_solver TS(t, T, time_order, M, cfl);
+	st_pstar.set_CD(CD);
+	st_pstar.set_sens_hllc(false);
+	TS.solve(st_pstar, true);
 	st.get_W(W);
 	vector<double> pstar = W[2];
 	/*********************************/
