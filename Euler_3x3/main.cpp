@@ -113,7 +113,7 @@ int main()
 	st_pstar.set_CD(CD);
 	st_pstar.set_sens_hllc(false);
 	TS.solve(st_pstar, true);
-	st.get_W(W);
+	st_pstar.get_W(W);
 	vector<double> pstar = W[2];
 	/*********************************/
 	
