@@ -19,4 +19,5 @@ void cmax(const int & n, int & maxa);
 void cbin(const int & n, int bin[]);
 void can(const int & n, double & an);
 double L2dot(const vector<double>&, const vector<double>&, double);
+vector<double> operator-(const vector<double> &, const vector<double> &);
 #endif /* utilities_hpp */

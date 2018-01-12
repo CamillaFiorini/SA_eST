@@ -54,6 +54,14 @@ double L2dot(const vector<double>& f1, const vector<double>& f2, double dx)
 		res += f1[i]*f2[i]*dx;
 	return res;
 };
+vector<double> operator-(const vector<double> & a, const vector<double> & b)
+{
+	vector<double> res(a.size());
+	for (unsigned int i = 0; i < a.size(); ++i)
+		res[i] = a[i] - b[i];
+	return res;
+};
+
 
 /********** Restoring ***************/
 /*	t = 0.0114115027477935;
