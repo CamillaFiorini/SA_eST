@@ -98,7 +98,7 @@ int main()
 	vector<double> h(N, 1.), dh(N,0.);
 	vector<double> h_xc(N, 0.), dh_xc(N,0.);
 	vector<double> h_L(N, 0.), dh_L(N,0.);
-	double pi(4*atan(1)), x, xc(0.05*k), L(0.05*j);
+	double pi(4*atan(1)), x, xc(0.5), L(0.5);
 	
 	for (int i = 0; i < N; ++i)
 	{
