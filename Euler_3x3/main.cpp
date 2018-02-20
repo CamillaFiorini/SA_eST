@@ -116,7 +116,7 @@ int main()
 	st.set_CD(CD);
 	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);
-	TS.solve(st, true);
+	TS.solve(st);
 	st.print_physical(path, ios::out | ios::app);
 
 	return 0;
