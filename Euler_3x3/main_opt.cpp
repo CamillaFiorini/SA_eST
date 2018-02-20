@@ -18,11 +18,12 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(1e-3), T(100), t(0), cfl(0.5);
+	double xa(0), xb(1), dx(1e-2), T(40), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
 	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
-	ofstream fout_param(path+"param.dat");
-	ofstream fout_J(path+"J.dat");
+	ofstream fout_param(path+"param.dat");//, ios::out | ios::app);
+	ofstream fout_J(path+"J.dat");//, ios::out | ios::app);
+	ofstream fout_gradJ(path+"gradJ.dat");
 	int N = M.get_N();
 	/***************************************/
 	
@@ -55,15 +56,15 @@ int main()
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = false;
 */	/****************************/
 	/*** Transonic with shock ***/
-/*	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
+	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
-*/	/****************************/
+	/****************************/
 	/********* Subsonic *********/
-	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
+/*	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
-	/*ifstream if_pstar ("sub_p.dat"); vector<double> pstar(N);
+*/	/*ifstream if_pstar ("sub_p.dat"); vector<double> pstar(N);
 	int k(0);
 	while(if_pstar >> pstar[k])
 		++k;*/
@@ -126,7 +127,7 @@ int main()
 	st.push_back(st_xc);
 	vector<vector<vector<double> > > W(NP);
 	int time_order (1);
-	bool CD (false);
+	bool CD (true);
 	time_solver TS(t, T, time_order, M, cfl);
 	for (int k = 0; k < NP; ++k)
 	{
@@ -136,7 +137,7 @@ int main()
 		st[k].set_sens_hllc(false);
 	}
 	unsigned int iter1(0), max_iter1(1000), iter2(0), max_iter2(20);
-	double toll = 1e-3;
+	double toll = 1e-5;
 	TS.solve(st[0], true);
 	st[0].get_W(W[0]);
 	vector<double> pstar = W[0][2];
@@ -187,6 +188,7 @@ int main()
 		}
 		cerr << "grad_() = ( " << gradJ[0] << ", " << gradJ[1] << ")\n";
 		cerr << "New param before checking: " << param[0] << " " << param[1] << endl;
+		fout_gradJ << gradJ[0] << "\t" << gradJ[1] << endl;
 		if(!( param[1] > 0 && param[1] < 1 && param[0] < 2*param[1] && param[0] < 2-2*param[1]))
 		{
 			if (param[0] < 0 && param[1] > 0 && param[1] < 1)
