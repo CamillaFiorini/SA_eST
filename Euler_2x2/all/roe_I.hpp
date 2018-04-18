@@ -10,6 +10,7 @@ class roe_I:public roe
 {
 public:
 	// Constructors
+	roe_I() : roe() {};
 	roe_I(vector<vector<double> > u, double g) : roe(u,g) {};
 	roe_I(vector<double>a, vector<double>b, vector<double>c, vector<double>d, double e) : roe(a,b,c,d,e) {};
 	// Methods

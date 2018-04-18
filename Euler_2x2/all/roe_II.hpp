@@ -13,6 +13,7 @@ protected:
 	double kappa;
 public:
 	// Constructors
+	roe_II() : roe(), kappa(1./3.) {};
 	roe_II(vector<vector<double> > u, double g) : roe(u,g), kappa(1./3.) {};
 	roe_II(vector<double>a, vector<double>b, vector<double>c, vector<double>d, double e) : roe(a,b,c,d,e), kappa(1./3.) {};
 	~roe_II() = default;

@@ -79,31 +79,20 @@ int main()
 		}
 	}
 	/********************************/
-	
-	roe_II st_tauL(tau0,u0,s_tau0[0],s_u0,gamma);
-	roe_II st_tauR(tau0,u0,s_tau0[1],s_u0,gamma);
-	roe_II st_m(tau0,u0,s_tau0[2],s_u0,gamma);
-	roe_II st_L(tau0,u0,s_tau0[3],s_u0,gamma);
-	roe_II st_xc(tau0,u0,s_tau0[4],s_u0,gamma);
-	vector<roe_II> st;
-	st.push_back(st_tauL);
-	st.push_back(st_tauR);
-	st.push_back(st_m);
-	st.push_back(st_L);
-	st.push_back(st_xc);
-	int time_order (2);
+	vector<roe_II> st (NP);
 	bool CD (true);
-	for(int k = 0; k < NP; ++k)
+	int time_order (2);
+	for (int k = 0; k < NP; ++k)
+	{
+		st[k].set_U(tau0,u0,s_tau0[k],s_u0);
+		st[k].set_gamma(gamma);
 		st[k].set_CD(CD);
+	}
+
 	time_solver TS(t, T, time_order, M, cfl);
-	
-	/*st_tauL.print_physical(path+"a0_");
-	TS.solve(st_tauL);
-	st_tauL.print_physical(path+"a0_", ios::out | ios::app);*/
 	
 	for(int k = 0; k < NP; ++k)
 	{
-		cerr << k << "\tst[k].size() = " << st.size() << endl;
 		st[k].print_physical(path+"a"+to_string(k)+"_");
 		TS.solve(st[k]);
 		st[k].print_physical(path+"a"+to_string(k)+"_", ios::out | ios::app);

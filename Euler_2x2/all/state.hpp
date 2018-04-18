@@ -19,7 +19,7 @@ protected:
 	vector<double> sigma;
 public:
 	// Constructors
-	state()=default;
+	state() : gamma(1.4), U(), CD(false), sigma() {};
 	state(vector<vector<double> > u, double g) : gamma(g), U(u), CD(false) {};
 	state(vector<double>, vector<double>, vector<double>, vector<double>, double, bool=false);
 	virtual ~state() = default;
@@ -28,6 +28,7 @@ public:
 	inline int get_size() const {return U[0].size();};
 	inline int get_dimension() const {return U.size();};
 	inline void set_U(const vector<vector<double> >& u) {U=u;return;};
+	void set_U(vector<double> tau, vector<double> u, vector<double> s_tau, vector<double> s_u);
 	inline void get_U(vector<vector<double> >& u) const {u=U;return;};
 	void get_U(vector<double>& u, int i) const;
 	inline void set_gamma(const double g) {gamma = g; return;};

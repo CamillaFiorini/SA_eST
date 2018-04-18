@@ -10,6 +10,7 @@ class roe:public state
 {
 public:
 	// Constructors
+	roe() : state() {};
 	roe(vector<vector<double> > u, double g) : state(u,g) {};
 	roe(vector<double>a, vector<double>b, vector<double>c, vector<double>d, double e) : state(a,b,c,d,e) {};
 	// Methods

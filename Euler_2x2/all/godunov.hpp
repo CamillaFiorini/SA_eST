@@ -10,6 +10,7 @@ class godunov:public state
 {
 public:
 	// Constructors
+	godunov() : state() {};
 	godunov(vector<vector<double> > u, double g) : state(u,g) {};
 	godunov(vector<double>a, vector<double>b, vector<double>c, vector<double>d, double e) : state(a,b,c,d,e) {};
 	// Methods
