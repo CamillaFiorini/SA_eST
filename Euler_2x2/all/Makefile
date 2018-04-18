@@ -1,8 +1,17 @@
 CXX = g++-6
 CXXFLAGS = -std=c++11 -Wall -fopenmp
 
-main: main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o
-	$(CXX) $(CXXFLAGS) -o main main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o
+main_uq: main_uq.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o time_solver.o
+	$(CXX) $(CXXFLAGS) -o main_uq main_uq.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o time_solver.o
+
+main: main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o time_solver.o
+	$(CXX) $(CXXFLAGS) -o main main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o time_solver.o
+
+main_old: main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o
+	$(CXX) $(CXXFLAGS) -o main_old main.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o
+
+time_solver.o: time_solver.hpp time_solver.cpp
+	$(CXX) $(CXXFLAGS) -c time_solver.cpp
 
 mesh.o: mesh.hpp mesh.cpp
 	$(CXX) $(CXXFLAGS) -c mesh.cpp
@@ -30,6 +39,6 @@ clean:
 
 distclean:
 	$(MAKE) clean
-	$(RM) main
+	$(RM) main main_old main_uq
 
 .PHONY: clean distclean
