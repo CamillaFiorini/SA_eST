@@ -18,3 +18,30 @@ void state::get_U(vector<double>& u, int i) const
 		u[k] = U[k][i];
 	return;
 };
+
+void state::print_physical(const string& path, ios_base::openmode mode, int prec)
+{
+	ofstream file_u (path+"u.dat", mode);
+	ofstream file_tau (path+"tau.dat", mode);
+	ofstream file_s_u (path+"s_u.dat", mode);
+	ofstream file_s_tau (path+"s_tau.dat", mode);
+	
+	file_u.precision(prec);
+	file_tau.precision(prec);
+	file_s_u.precision(prec);
+	file_s_tau.precision(prec);
+	
+	for (unsigned int k = 0; k < U[0].size(); ++k)
+	{
+		file_tau << U[0][k] << "\t";
+		file_u << U[1][k] << "\t";
+		file_s_tau << U[2][k] << "\t";
+		file_s_u << U[3][k] << "\t";
+	}
+	file_tau << endl;
+	file_u << endl;
+	file_s_tau << endl;
+	file_s_u << endl;
+	
+	return;
+};
