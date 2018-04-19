@@ -28,7 +28,7 @@ double time_solver::solve (state& st, bool only_state)
 		++cont;
 		if(cont%100==0)
 		{
-			cout << "t = " << t << endl;
+		//	cout << "t = " << t << endl;
 		}
 		/*** dt computation ***/
 		st.compute_lambda(lambda);
