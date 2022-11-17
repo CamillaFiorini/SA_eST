@@ -6,7 +6,11 @@ void roe_I::get_UL_extrapolated (vector<double>& UL, int i) const
 	if(i > 0)
 		for (int k = 0; k < D; ++k)
 			UL[k] = U[k][i-1];
-	else
+	if(i == 0)
+		for (int k = 0; k < D; ++k)
+			UL[k] = U[k][i];
+	
+	if(i == 0 && (bc_L[0] || bc_L[1] || bc_L[2]))
 	{
 		vector<double> Ui, W; //conservative and physical variables interior cell Ui = (rho, rho u, rho E), W = (rho, u, p)
 		this->get_W(W,0);
@@ -60,6 +64,7 @@ void roe_I::get_UL_extrapolated (vector<double>& UL, int i) const
 		}
 		UL[2] = p/(gamma-1)+0.5*UL[1]*UL[1]/UL[0]; // rhoE = p/(gamma-1)+ 0.5rho*u^2
 		UL[5] = s_p/(gamma-1)+UL[1]*UL[4]/UL[0]-0.5*UL[3]*UL[1]*UL[1]/UL[0]/UL[0];
+		
 	}
 	return;
 };
@@ -73,7 +78,11 @@ void roe_I::get_UR_extrapolated (vector<double>& UR, int i) const
 	if(i < N)
 		for (int k = 0; k < D; ++k)
 			UR[k] = U[k][i];
-	else
+	if(i == N)
+		for (int k = 0; k < D; ++k)
+			UR[k] = U[k][i-1];
+	
+	if(i == N && (bc_R[0] || bc_R[1] || bc_R[2]))
 	{
 		vector<double> Ui, W; //conservative and physical variables interior cell
 		this->get_W(W,N-1);
@@ -108,12 +117,12 @@ void roe_I::get_UR_extrapolated (vector<double>& UR, int i) const
 		else
 		{
 			p = W[2];
-			s_p = W[5];
+			s_p =  W[5];
 		}
 		
 		UR[0] = (p/(gamma-1)+p_tot)/H;
 		UR[3] = (s_p/(gamma-1)+s_p_tot-UR[0]*s_H)/H;
-		if (p_tot > p)
+		if (p_tot >= p)
 		{
 			UR[1] = sqrt(2*UR[0]*(p_tot-p));
 			UR[4] = 1/UR[1]*(UR[3]*(p_tot-p) + UR[0]*(s_p_tot-s_p));

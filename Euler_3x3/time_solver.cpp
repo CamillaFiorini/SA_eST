@@ -18,13 +18,13 @@ double time_solver::solve (state& st, bool only_state)
 
 	while (t < end_time && !stationary)
 	{
-		/*if (cont%10000==0)
+	/*	if (cont%100==0)
 		{
 			cout << t << endl;
-			cerr << t << endl;
+			//cerr << t << endl;
 			st.print_physical("", ios::out | ios::app);
-		}*/
-		maxR.assign(D, 0);
+		}
+	*/	maxR.assign(D, 0);
 
 		++cont;
 		vector<int> d1, d3, c;
@@ -140,11 +140,12 @@ double time_solver::solve (state& st, bool only_state)
 					for (int k=0; k<D; ++k)
 						U_int[k][i] = Uold[k][i] + 0.5*dt/dx*R[k][i];
 				
+				vector<vector<double> > R_old = R;
 				st.set_U(U_int);
 				st.compute_residual(R);
 				for (int i=0; i<N; ++i)
 					for (int k=0; k<D; ++k)
-						U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+						U[k][i] = Uold[k][i] + 0.5*dt/dx*(R[k][i]+R_old[k][i]);
 			}
 		}
 		else

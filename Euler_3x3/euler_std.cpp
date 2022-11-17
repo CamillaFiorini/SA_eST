@@ -19,7 +19,7 @@ int main()
 	/********* Domain definition ***********/
 	double xa(0), xb(1), dx(1e-3), T(0.1), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
-	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
+	string path = "./shock_pos_sens_uc/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
 	double da(0);
 	ofstream file_da(path+"da.dat");
 	file_da << da << endl;
@@ -54,11 +54,11 @@ int main()
 	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
 	st.set_bc_L(VL, bc_L);
 	st.set_bc_R(VR, bc_R);
+    st.set_sens_shock_pos(true);
 	int time_order (1);
-	bool CD (false);
+	bool CD (true);
 	st.set_CD(CD);
 	st.set_sens_hllc(false);
-	st.print_physical(path);
 	time_solver TS(t, T, time_order, M, cfl);
 	TS.solve(st);
 	st.print_physical(path, ios::out | ios::app);

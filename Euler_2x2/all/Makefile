@@ -1,6 +1,9 @@
 CXX = g++-6
 CXXFLAGS = -std=c++11 -Wall -fopenmp
 
+main_mc: main_mc.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o time_solver.o
+	$(CXX) $(CXXFLAGS) -o main_mc main_mc.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o time_solver.o
+
 main_uq: main_uq.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o time_solver.o
 	$(CXX) $(CXXFLAGS) -o main_uq main_uq.cpp mesh.o state.o roe.o roe_I.o roe_II.o godunov.o utilities.o time_solver.o
 

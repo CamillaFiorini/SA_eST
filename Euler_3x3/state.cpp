@@ -1,6 +1,6 @@
 #include"state.hpp"
 
-state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, const vector<double>& H, const vector<double>& delta_H, const vector<double>& S_H, const vector<double>& delta_S_H, bool c)
+state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, const vector<double>& H, const vector<double>& delta_H, const vector<double>& S_H, const vector<double>& delta_S_H, bool c, bool d)
 {
 	D = 6;
 	U.resize(D);
@@ -22,11 +22,12 @@ state::state(const vector<double>& rho, const vector<double>& u, const vector<do
 		U[5][i] = 0.5*s_rho[i]*u[i]*u[i] + rho[i]*u[i]*s_u[i] + s_p[i]/(gamma-1);
 	}
 	CD = c;
+    sens_shock_pos = d;
 	bc_L.assign(3,false);
 	bc_R.assign(3,false);
 };
 
-state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, const vector<double>& H, const vector<double>& delta_H, bool c)
+state::state(const vector<double>& rho, const vector<double>& u, const vector<double>& p, const vector<double>& s_rho, const vector<double>& s_u, const vector<double>& s_p, double g, const vector<double>& H, const vector<double>& delta_H, bool c, bool d)
 {
 	D = 6;
 	U.resize(D);
@@ -48,6 +49,7 @@ state::state(const vector<double>& rho, const vector<double>& u, const vector<do
 		U[5][i] = 0.5*s_rho[i]*u[i]*u[i] + rho[i]*u[i]*s_u[i] + s_p[i]/(gamma-1);
 	}
 	CD = c;
+    sens_shock_pos = d;
 	bc_L.assign(3,false);
 	bc_R.assign(3,false);
 };
@@ -82,7 +84,7 @@ void state::get_W(vector<double>& a, int k) const
 	a[1] = U[1][k]/U[0][k]; // u = u*rho/rho
 	a[2] = (gamma-1)*(U[2][k] - 0.5*U[1][k]*U[1][k]/U[0][k]); // p = (gamma-1)(E - 0.5(rho*u)^2/rho) = (gamma-1)(E - 0.5rho*u^2)
 	a[3] = U[3][k];
-	a[4] = (U[4][k] - U[3][k]*a[1])/U[0][k]; // s_u =
+	a[4] = (U[4][k] - U[3][k]*a[1])/U[0][k]; // s_u = (s_(rhou) - s_rho u)/rho
 	a[5] = (gamma-1)*(U[5][k]-0.5*U[3][k]*a[1]*a[1] - U[1][k]*a[4]); //s_p = (gamma-1)(s_rhoE - 0.5*s_rho*u^2 - rho*u*s_u)
 	
 	return;
@@ -153,7 +155,7 @@ void state::print_conservative(const string& path, ios_base::openmode mode, int 
 	file_s_rhou.precision(prec);
 	file_s_rhoE.precision(prec);
 	
-	for (unsigned int k = 0; k < U[0].size(); ++k)
+	for (unsigned int k = 0; k < U[0].size() - 1; ++k)
 	{
 		file_rho << U[0][k] << "\t";
 		file_rhou << U[1][k] << "\t";
@@ -162,12 +164,12 @@ void state::print_conservative(const string& path, ios_base::openmode mode, int 
 		file_s_rhou << U[4][k] << "\t";
 		file_s_rhoE << U[5][k] << "\t";
 	}
-	file_rho << endl;
-	file_rhou << endl;
-	file_rhoE << endl;
-	file_s_rho << endl;
-	file_s_rhou << endl;
-	file_s_rhoE << endl;
+	file_rho << U[0][U[0].size() - 1] << endl;
+	file_rhou << U[1][U[0].size() - 1] << endl;
+	file_rhoE << U[2][U[0].size() - 1] << endl;
+	file_s_rho << U[3][U[0].size() - 1] << endl;
+	file_s_rhou << U[4][U[0].size() - 1] << endl;
+	file_s_rhoE << U[5][U[0].size() - 1] << endl;
 	
 	return;
 };
@@ -190,7 +192,7 @@ void state::print_physical(const string& path, ios_base::openmode mode, int prec
 	vector<vector<double> > W;
 	this->get_W(W);
 	
-	for (unsigned int k = 0; k < W[0].size(); ++k)
+	for (unsigned int k = 0; k < W[0].size() - 1; ++k)
 	{
 		file_rho << W[0][k] << "\t";
 		file_u << W[1][k] << "\t";
@@ -199,12 +201,12 @@ void state::print_physical(const string& path, ios_base::openmode mode, int prec
 		file_s_u << W[4][k] << "\t";
 		file_s_p << W[5][k] << "\t";
 	}
-	file_rho << endl;
-	file_u << endl;
-	file_p << endl;
-	file_s_rho << endl;
-	file_s_u << endl;
-	file_s_p << endl;
+	file_rho << W[0][W[0].size() - 1] << endl;
+	file_u << W[1][W[0].size() - 1] << endl;
+	file_p << W[2][W[0].size() - 1] << endl;
+	file_s_rho << W[3][W[0].size() - 1] << endl;
+	file_s_u << W[4][W[0].size() - 1] << endl;
+	file_s_p << W[5][W[0].size() - 1] << endl;
 
 	return;
 };

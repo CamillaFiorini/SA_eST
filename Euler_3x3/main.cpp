@@ -17,10 +17,10 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(1e-3), T(100), t(0), cfl(0.5);
+	double xa(0), xb(1), dx(1e-3), T(0.1), t(0), cfl(0.9);
 	mesh M (xa, xb, dx);
-	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
-	double da(0);
+	string path = "new_sub_Euler1d/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
+	double da(0.0);
 	ofstream file_da(path+"da.dat");
 	file_da << da << endl;
 	int N = M.get_N();
@@ -63,17 +63,13 @@ int main()
 /*	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
-	ifstream if_pstar ("sub_p.dat"); vector<double> pstar(N);
-	int k(0);
-	while(if_pstar >> pstar[k])
-		++k;
 */	/****************************/
 	double s_rho_init(0), s_u_init(0), s_p_init(0);
 	double gamma(1.4);
-	double H_L(4.0+da), p_tot_L(2), p_L(0);
-	double H_R(0), p_tot_R(0), p_R(p_init);
+	double H_L(4), p_tot_L(2), p_L(0);
+	double H_R(0), p_tot_R(0), p_R(p_init+da);
 	double s_H_L(0), s_p_tot_L(0), s_p_L(0);
-	double s_H_R(0), s_p_tot_R(0), s_p_R(1);
+	double s_H_R(0), s_p_tot_R(0), s_p_R(0);
 	vector<double> u0(N, u_init);
 	vector<double> rho0(N, rho_init);
 	vector<double> p0(N, p_init);
@@ -98,17 +94,24 @@ int main()
 	vector<double> h(N, 1.), dh(N,0.);
 	vector<double> h_xc(N, 0.), dh_xc(N,0.);
 	vector<double> h_L(N, 0.), dh_L(N,0.);
-	double pi(4*atan(1)), x, xc(0.5), L(0.5);
+	vector<double> h_A(N, 0.), dh_A(N,0.);
+	double pi(4*atan(1)), x, xc(0.5), L(0.5), A(1.);
 	
 	for (int i = 0; i < N; ++i)
 	{
 		x = 0.5*dx + i*dx;
-		h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
-		dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h[i] = 2. - A*(sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+		dh[i] = A*(sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - A*(sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_xc[i] = - pi/L*A*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_xc[i] = pi/L*A*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*A*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_L[i] = - pi/L/L*(x-xc)*A*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_L[i] = pi/L/L*(dx*i-xc)*A*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*A*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_A[i] = - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_A[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 	}
 	/***************************************/
 	
-	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
+	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh, h_L, dh_L);
 	st.set_bc_L(VL, bc_L);
 	st.set_bc_R(VR, bc_R);
 	int time_order (1);
@@ -117,7 +120,7 @@ int main()
 	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);
 	TS.solve(st);
-	st.print_physical(path, ios::out | ios::app);
-
+	st.print_physical(path);//, ios::out | ios::app);
+	st.print_conservative(path+"cons_");
 	return 0;
 }

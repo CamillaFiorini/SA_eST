@@ -220,7 +220,7 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 	U_SR.resize(D);
 		
 	vector<double> r1(D), r3(D), alpha_tilde(D), S(D/2);
-	int d1(this->detector_s1(UL, UR, 4e-3)), d3(this->detector_s3(UL, UR, 4e-3));
+	int d1(this->detector_s1(UL, UR, 5e-3)), d3(this->detector_s3(UL, UR, 5e-3));
 	this->compute_alpha_tilde(UL, UR, alpha_tilde);
 	
 	double utilde = this->compute_utilde(UL, UR);
@@ -250,11 +250,28 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 	r3[3] = 0;
 	r3[4] = s_utilde + s_atilde;
 	r3[5] = s_Htilde + s_utilde*atilde + utilde*s_atilde;
-
+	
+	/************** HLLC *************/
+	double pR = (gamma-1)*(UR[2] - 0.5*UR[1]*UR[1]/UR[0]);
+	double pL = (gamma-1)*(UL[2] - 0.5*UL[1]*UL[1]/UL[0]);
+	
+	double S_star = (pR-pL+UL[1]*(lambda[0]-UL[1]/UL[0])-UR[1]*(lambda[2]-UR[1]/UR[0]))/(UL[0]*(lambda[0]-UL[1]/UL[0])-UR[0]*(lambda[2]-UR[1]/UR[0]));
+	
+	UL_star[0] = 1;
+	UL_star[1] = S_star;
+	UL_star[2] = UL[2]/UL[0]+(S_star-UL[1]/UL[0])*(S_star + pL/UL[0]/(lambda[0]-UL[1]/UL[0]));
+	
+	UR_star[0] = 1;
+	UR_star[1] = S_star;
+	UR_star[2] = UR[2]/UR[0]+(S_star-UR[1]/UR[0])*(S_star + pR/UR[0]/(lambda[2]-UR[1]/UR[0]));
+	/*********************************/
+	
 	for (int k = 0; k < D/2; ++k)
 	{
-		UL_star[k] = UL[k] + alpha_tilde[0]*r1[k];
-		UR_star[k] = UR[k] - alpha_tilde[2]*r3[k];
+		UL_star[k] //*= UL[0]*(lambda[0]-UL[1]/UL[0])/(lambda[0]-S_star);
+					= UL[k] + alpha_tilde[0]*r1[k];
+		UR_star[k] //*= UR[0]*(lambda[2]-UR[1]/UR[0])/(lambda[2]-S_star);
+					= UR[k] - alpha_tilde[2]*r3[k];
 	}
 	// Checking for left transonic rarefactions
 	vector<double> WL, WL_star;
@@ -273,7 +290,8 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 	}
 	for (int k = 0; k < D/2; ++k)
 	{
-		S[k] = (s_utilde - s_atilde)*(UL_star[k] - UL[k])*d1 + s_utilde*(UR_star[k] - UL_star[k]) + (s_utilde + s_atilde)*(UR[k] - UR_star[k])*d3;
+        if( ! this->get_sens_shock_pos() )
+            S[k] = (s_utilde - s_atilde)*(UL_star[k] - UL[k])*d1 + s_utilde*(UR_star[k] - UL_star[k]) + (s_utilde + s_atilde)*(UR[k] - UR_star[k])*d3;
 		if (!sens_hllc)
 		{
 			UR_star[k+3] = 1.0/(lambda[2]-lambda[0])*(lambda[2]*UR[k+3] - lambda[0]*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);
@@ -355,20 +373,6 @@ void roe::compute_residual(vector<vector<double> >& R) const
 		}
 		else
 		{
-			if(transonic_raref == 0)
-			{
-				for (int k = 0; k < D; ++k)
-				{
-					if(i < N)
-					{
-						R[k][i] += max(lambda[0], 0.0)*(UL[k] - UL_star[k]) + max(lambda[1], 0.0)*(UL_star[k]-UR_star[k]) + max(lambda[2],0.0)*(UR_star[k]-UR[k]);
-					}
-					if(i > 0)
-					{
-						R[k][i-1] -= min(lambda[0], 0.0)*(UL_star[k] - UL[k]) + min(lambda[1], 0.0)*(UR_star[k] - UL_star[k]) + min(lambda[2],0.0)*(UR[k] - UR_star[k]);
-					}
-				}
-			}
 			if(transonic_raref == 1) //left transonic raref
 			{
 				vector<double> WL, WL_star;
@@ -388,6 +392,21 @@ void roe::compute_residual(vector<vector<double> >& R) const
 					}
 				}
 			}
+			if(transonic_raref == 0)
+			{
+				for (int k = 0; k < D; ++k)
+				{
+					if(i < N)
+					{
+						R[k][i] += max(lambda[0], 0.0)*(UL[k] - UL_star[k]) + max(lambda[1], 0.0)*(UL_star[k]-UR_star[k]) + max(lambda[2],0.0)*(UR_star[k]-UR[k]);
+					}
+					if(i > 0)
+					{
+						R[k][i-1] -= min(lambda[0], 0.0)*(UL_star[k] - UL[k]) + min(lambda[1], 0.0)*(UR_star[k] - UL_star[k]) + min(lambda[2],0.0)*(UR[k] - UR_star[k]);
+					}
+				}
+			}
+			
 		}
 		
 		// adding (dx(h))(P-F)

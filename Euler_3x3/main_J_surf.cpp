@@ -112,15 +112,16 @@ int main()
 	st_pstar.get_W(W);
 	vector<double> pstar = W[2];
 	/*********************************/
-	
+	/*
 	for (int k = 1; k < 40; ++k)
 	{
 		
 		for(int j = 1; j < 20; ++j)
 		{
-			vector<vector<double> > W;
+			vector<vector<double> > W;*/
 			/******** h definition *********/
-			L=0.05*j; A=0.05*k-0.05;
+			L=0.5;//0.05*j;
+			A=1.2;//0.05*k-0.05;
 			for (int i = 0; i < N; ++i)
 			{
 				x = 0.5*dx + i*dx;
@@ -136,9 +137,12 @@ int main()
 			st.set_sens_hllc(false);
 			TS.solve(st, true);
 			st.get_W(W);
-			cerr << 0.5*L2dot(W[2]-pstar, W[2]-pstar, dx) << "\t";
-		}
-		cerr << endl;
-	}
+			for (int i = 0; i < N; ++i)
+				cerr << W[2][i] << "\t";
+			//cerr << 0.5*L2dot(W[2]-pstar, W[2]-pstar, dx) << "\t";
+	//	}
+	//	cerr << endl;
+//	}
+
 	return 0;
 }

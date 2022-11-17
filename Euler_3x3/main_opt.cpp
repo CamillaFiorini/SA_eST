@@ -18,12 +18,12 @@ using namespace std;
 int main()
 {
 	/********* Domain definition ***********/
-	double xa(0), xb(1), dx(1e-2), T(40), t(0), cfl(0.5);
+	double xa(0), xb(1), dx(1e-2), T(100), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
 	string path = "results/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
-	ofstream fout_param(path+"param.dat");//, ios::out | ios::app);
-	ofstream fout_J(path+"J.dat");//, ios::out | ios::app);
-	ofstream fout_gradJ(path+"gradJ.dat");
+	ofstream fout_param(path+"param_istr.dat");//, ios::out | ios::app);
+	ofstream fout_J(path+"J_istr.dat");//, ios::out | ios::app);
+	ofstream fout_gradJ(path+"gradJ_istr.dat");
 	int N = M.get_N();
 	/***************************************/
 	
@@ -51,15 +51,15 @@ int main()
 	vector<bool> bc_L(3, false), bc_R(3, false);
 	vector<double> VL(6), VR(6); // V = [H, p_tot, p]
 	/*** Isentropic transonic ***/
-/*	double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25);
+	double rho_init(1.28125), u_init(1.082003561600919), p_init(1.25);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = false;
-*/	/****************************/
+	/****************************/
 	/*** Transonic with shock ***/
-	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
+/*	double rho_init(1.5), u_init(0.730296743340221), p_init(1.6);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
 	bc_R[0] = false; bc_R[1] = false; bc_R[2] = true;
-	/****************************/
+*/	/****************************/
 	/********* Subsonic *********/
 /*	double rho_init(1.66875), u_init(0.394721729127866), p_init(1.87);
 	bc_L[0] = true; bc_L[1] = true; bc_L[2] = false;
@@ -97,18 +97,18 @@ int main()
 
 	/******** h and s_h definition *********/
 	vector<double> h(N, 1.), dh(N,0.);
-	vector<double> h_xc(N, 0.), dh_xc(N,0.);
 	vector<double> h_L(N, 0.), dh_L(N,0.);
-	double pi(4*atan(1)), x, xc(0.5), L(0.5);
+	vector<double> h_A(N, 0.), dh_A(N,0.);
+	double pi(4*atan(1)), x, xc(0.5), L(0.5), A(1.);
 	for (int i = 0; i < N; ++i)
 	{
 		x = 0.5*dx + i*dx;
-		h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
-		dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
-		h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
-		dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
-		h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
-		dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h[i] = 2. - A*(sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+		dh[i] = A*(sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - A*(sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_L[i] = - pi/L/L*(x-xc)*A*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_L[i] = pi/L/L*(dx*i-xc)*A*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*A*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_A[i] = - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_A[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 	}
 	/***************************************/
 	
@@ -117,17 +117,17 @@ int main()
 	double J(0), J_old(1), coeff(1);
 	vector<double> gradJ(NP), param(NP), param_old(NP);
 	bool stopcrit (false);
-	param[0] = L;
-	param[1] = xc;
+	param[0] = A;
+	param[1] = L;
 	param_old = param;
+	roe_I st_A(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh, h_A, dh_A);
 	roe_I st_L(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh, h_L, dh_L);
-	roe_I st_xc(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh, h_xc, dh_xc);
 	vector<roe_I> st;
+	st.push_back(st_A);
 	st.push_back(st_L);
-	st.push_back(st_xc);
 	vector<vector<vector<double> > > W(NP);
 	int time_order (1);
-	bool CD (true);
+	bool CD (false);
 	time_solver TS(t, T, time_order, M, cfl);
 	for (int k = 0; k < NP; ++k)
 	{
@@ -142,28 +142,28 @@ int main()
 	st[0].get_W(W[0]);
 	vector<double> pstar = W[0][2];
 	
-	param[0] = 0.4;
-	param[1] = 0.4;
-	L = 0.4; xc = 0.4;
+	param[0] = 0.5;
+	param[1] = 0.2;
+	A = 0.5; L = 0.2;
 	for (int i = 0; i < N; ++i)
 	{
 		x = 0.5*dx + i*dx;
-		h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
-		dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
-		h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
-		dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
-		h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
-		dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h[i] = 2. - A*(sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+		dh[i] = A*(sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - A*(sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_L[i] = - pi/L/L*(x-xc)*A*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_L[i] = pi/L/L*(dx*i-xc)*A*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*A*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+		h_A[i] = - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+		dh_A[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 	}
 	for (int k = 0; k < NP; ++k)
 	{
 		st[k].set_h(h);
 		st[k].set_dh(dh);
 	}
-	st[0].set_sh(h_L);
-	st[0].set_dsh(dh_L);
-	st[1].set_sh(h_xc);
-	st[1].set_dsh(dh_xc);
+	st[0].set_sh(h_A);
+	st[0].set_dsh(dh_A);
+	st[1].set_sh(h_L);
+	st[1].set_dsh(dh_L);
 	#pragma omp parallel for
 	for(int k = 0; k < NP; ++k)
 	{
@@ -189,7 +189,8 @@ int main()
 		cerr << "grad_() = ( " << gradJ[0] << ", " << gradJ[1] << ")\n";
 		cerr << "New param before checking: " << param[0] << " " << param[1] << endl;
 		fout_gradJ << gradJ[0] << "\t" << gradJ[1] << endl;
-		if(!( param[1] > 0 && param[1] < 1 && param[0] < 2*param[1] && param[0] < 2-2*param[1]))
+		/**************** Projection (x_c,L) ****************/
+/*		if(!( param[1] > 0 && param[1] < 1 && param[0] < 2*param[1] && param[0] < 2-2*param[1]))
 		{
 			if (param[0] < 0 && param[1] > 0 && param[1] < 1)
 			{
@@ -225,29 +226,45 @@ int main()
 				gradJ[k] = (param_old[k]-param[k])/coeff;
 			}
 		}
-		
-		L = param[0];
-		xc = param[1];
+*/		/**********************************************/
+		/**************** Projection (A,L) ****************/
+		if(!( param[1] > 0 && param[1] < 1 && param[0] < 2 && param[0] > 0))
+		{
+			if (param[0] < 0)
+				param[0] = 0;
+			if(param[0] > 2)
+				param[0] = 1.99;
+			if (param[1] < 0)
+				param[1] = 0.01;
+			if(param[1]>1)
+				param[1] = 1;
+			for (int k = 0; k < NP; ++k)
+				gradJ[k] = (param_old[k]-param[k])/coeff;
+		}
+		 /**********************************************/
+
+		A = param[0];
+		L = param[1];
 		cerr << "New param after checking the domain: " << param[0] << " " << param[1] << endl;
 		for (int i = 0; i < N; ++i)
 		{
 			x = 0.5*dx + i*dx;
-			h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
-			dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
-			h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
-			dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
-			h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
-			dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+			h[i] = 2. - A*(sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+			dh[i] = A*(sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - A*(sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+			h_L[i] = - pi/L/L*(x-xc)*A*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+			dh_L[i] = pi/L/L*(dx*i-xc)*A*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*A*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+			h_A[i] = - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+			dh_A[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 		}
 		for (int k = 0; k < NP; ++k)
 		{
 			st[k].set_h(h);
 			st[k].set_dh(dh);
 		}
-		st[0].set_sh(h_L);
-		st[0].set_dsh(dh_L);
-		st[1].set_sh(h_xc);
-		st[1].set_dsh(dh_xc);
+		st[0].set_sh(h_A);
+		st[0].set_dsh(dh_A);
+		st[1].set_sh(h_L);
+		st[1].set_dsh(dh_L);
 		
 		TS.solve(st[0], true);
 		st[0].get_W(W[0]);
@@ -265,15 +282,14 @@ int main()
 			coeff *= 0.5;
 			for (int k = 0; k < NP; ++k)
 				param[k] = param_old[k] - coeff*gradJ[k];
-			cerr << "Trying with x_c = " << param[1] << ", L = " << param[0] << endl;
-			L = param[0];
-			xc = param[1];
+			cerr << "Trying with L = " << param[1] << ", A = " << param[0] << endl;
+			A = param[0];
+			L = param[1];
 			for (int i = 0; i < N; ++i)
 			{
 				x = 0.5*dx + i*dx;
-				h[i] = 2. - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
-				dh[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
-
+				h[i] = 2. - A*(sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+				dh[i] = A*(sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - A*(sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 			}
 			st[0].set_h(h);
 			st[0].set_dh(dh);
@@ -292,16 +308,16 @@ int main()
 			for (int i = 0; i < N; ++i)
 			{
 				x = 0.5*dx + i*dx;
-				h_xc[i] = - pi/L*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
-				dh_xc[i] = pi/L*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
-				h_L[i] = - pi/L/L*(x-xc)*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
-				dh_L[i] = pi/L/L*(dx*i-xc)*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+				h_L[i] = - pi/L/L*(x-xc)*A*sin(2*pi*(x-xc)/L)*(x>xc-L/2.)*(x<xc+L/2.);
+				dh_L[i] = pi/L/L*(dx*i-xc)*A*sin(2*pi*(dx*i-xc)/L)*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - pi/L/L*(dx*(i+1)-xc)*A*sin(2*pi*(dx*(i+1)-xc)/L)*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
+				h_A[i] = - (sin((x-xc)/L*pi - 0.5*pi)*sin((x-xc)/L*pi - 0.5*pi))*(x>xc-L/2.)*(x<xc+L/2.);
+				dh_A[i] = (sin((dx*i-xc)/L*pi - 0.5*pi)*sin((dx*i-xc)/L*pi - 0.5*pi))*(dx*i>xc-L/2.)*(dx*i<xc+L/2.) - (sin((dx*(i+1)-xc)/L*pi - 0.5*pi)*sin((dx*(i+1)-xc)/L*pi - 0.5*pi))*(dx*(i+1)>xc-L/2.)*(dx*(i+1)<xc+L/2.);
 			}
 
-			st[0].set_sh(h_L);
-			st[0].set_dsh(dh_L);
-			st[1].set_sh(h_xc);
-			st[1].set_dsh(dh_xc);
+			st[0].set_sh(h_A);
+			st[0].set_dsh(dh_A);
+			st[1].set_sh(h_L);
+			st[1].set_dsh(dh_L);
 			st[1].set_h(h);
 			st[1].set_dh(dh);			
 			#pragma omp parallel for
@@ -318,7 +334,7 @@ int main()
 			fout_param << param[k] << "\t";
 		fout_param << endl;
 		fout_J << J << endl;
-		cout << "With param = (" << xc << ", " << L << ")\t J = " << J << endl;
+		cout << "With param = (" << A << ", " << L << ")\t J = " << J << endl;
 	}
 	for(int k = 0; k < NP; ++k)
 	{
