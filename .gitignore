@@ -6,7 +6,6 @@ main_mc
 main_opt
 main_J_surf
 euler_std
-results
 *.txt
 *.m
 Makefile
