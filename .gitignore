@@ -9,5 +9,4 @@ euler_std
 results
 *.txt
 *.m
-*.dat
 Makefile
