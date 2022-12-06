@@ -17,7 +17,7 @@ protected:
 	double gamma;
 	vector<vector<double> > U;
 	bool CD;
-    bool sens_shock_pos;
+    bool activate_source_term;
 	vector<double> sigma;
 	int D;
 	vector<bool> bc_L;
@@ -31,7 +31,7 @@ protected:
 public:
 	// Constructors
 	state()=default;
-	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), sens_shock_pos(false), D(u.size()), bc_L(false), bc_R(false) {h.assign(U[0].size(),1.); delta_h.assign(U[0].size(),0.); s_h.assign(U[0].size(),0.); delta_s_h.assign(U[0].size(),0.);};
+	state(const vector<vector<double> >& u, double g) : gamma(g), U(u), CD(false), activate_source_term(true), D(u.size()), bc_L(false), bc_R(false) {h.assign(U[0].size(),1.); delta_h.assign(U[0].size(),0.); s_h.assign(U[0].size(),0.); delta_s_h.assign(U[0].size(),0.);};
 	state(const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, double, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, bool=false, bool = false);
 	state(const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, const vector<double>&, double, const vector<double>&, const vector<double>&, bool=false, bool = false);
 	virtual ~state() = default;
@@ -53,8 +53,8 @@ public:
 	inline double get_gamma() const {return gamma;};
     inline void set_CD(const bool c) {CD=c;};
 	inline bool get_CD() const {return CD;};
-    inline void set_sens_shock_pos(const bool c) {sens_shock_pos=c;};
-    inline bool get_sens_shock_pos() const {return sens_shock_pos;};
+    inline void set_activate_source_term(const bool c) {activate_source_term=c;};
+    inline bool get_activate_source_term() const {return activate_source_term;};
 	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
 	inline void get_sigma(vector<double>& s) {s = sigma;};
 	inline void set_bc_L(const vector<double>& v, const vector<bool>& bc) {bc_L = bc; VL_inf = v;};

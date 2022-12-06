@@ -290,8 +290,11 @@ int roe::compute_U_star(const vector<double>& UL, const vector<double>& UR, vect
 	}
 	for (int k = 0; k < D/2; ++k)
 	{
-        if( ! this->get_sens_shock_pos() )
+        if( this->get_activate_source_term() )
             S[k] = (s_utilde - s_atilde)*(UL_star[k] - UL[k])*d1 + s_utilde*(UR_star[k] - UL_star[k]) + (s_utilde + s_atilde)*(UR[k] - UR_star[k])*d3;
+        else
+            S[k] = 0;
+        
 		if (!sens_hllc)
 		{
 			UR_star[k+3] = 1.0/(lambda[2]-lambda[0])*(lambda[2]*UR[k+3] - lambda[0]*UL[k+3] - FR[k+3] + FL[k+3] + S[k]);

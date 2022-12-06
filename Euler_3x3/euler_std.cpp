@@ -54,7 +54,7 @@ int main()
 	roe_I st(rho0,u0, p0, s_rho0,s_u0, s_p0,gamma, h, dh);
 	st.set_bc_L(VL, bc_L);
 	st.set_bc_R(VR, bc_R);
-    st.set_sens_shock_pos(true);
+    st.set_activate_source_term(true);
 	int time_order (1);
 	bool CD (true);
 	st.set_CD(CD);
