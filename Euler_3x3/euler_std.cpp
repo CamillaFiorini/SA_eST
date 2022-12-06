@@ -19,10 +19,7 @@ int main()
 	/********* Domain definition ***********/
 	double xa(0), xb(1), dx(1e-3), T(0.1), t(0), cfl(0.5);
 	mesh M (xa, xb, dx);
-	string path = "./shock_pos_sens_uc/"; //"../../results/Euler_3x3_q1d/err_extrapol/isentropic/diff_ord1/dx5e-3/big_da/da005/";
-	double da(0);
-	ofstream file_da(path+"da.dat");
-	file_da << da << endl;
+	string path = "../results/state_CD/";
 	int N = M.get_N();
 	/***************************************/
 	
@@ -56,8 +53,8 @@ int main()
 	st.set_bc_R(VR, bc_R);
     st.set_activate_source_term(true);
 	int time_order (1);
-	bool CD (true);
-	st.set_CD(CD);
+    st.set_CD_state(true);
+    st.set_CD_sens(false);
 	st.set_sens_hllc(false);
 	time_solver TS(t, T, time_order, M, cfl);
 	TS.solve(st);

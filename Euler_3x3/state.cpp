@@ -21,7 +21,8 @@ state::state(const vector<double>& rho, const vector<double>& u, const vector<do
 		U[4][i] = s_rho[i]*u[i] + rho[i]*s_u[i];
 		U[5][i] = 0.5*s_rho[i]*u[i]*u[i] + rho[i]*u[i]*s_u[i] + s_p[i]/(gamma-1);
 	}
-	CD = c;
+    CD_state = c;
+    CD_sens = c;
     activate_source_term = d;
 	bc_L.assign(3,false);
 	bc_R.assign(3,false);
@@ -48,7 +49,8 @@ state::state(const vector<double>& rho, const vector<double>& u, const vector<do
 		U[4][i] = s_rho[i]*u[i] + rho[i]*s_u[i];
 		U[5][i] = 0.5*s_rho[i]*u[i]*u[i] + rho[i]*u[i]*s_u[i] + s_p[i]/(gamma-1);
 	}
-	CD = c;
+	CD_state = c;
+    CD_sens = c;
     activate_source_term = d;
 	bc_L.assign(3,false);
 	bc_R.assign(3,false);

@@ -222,9 +222,9 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 		this->get_UL_extrapolated(UL, i);
 		this->get_UR_extrapolated(UR, i);
 		this->compute_U_star(UL, UR, UL_star, UR_star, lambda, U_SL, U_SR);
-		if(CD)
+		if(CD_state)
 		{
-			for (int k = 0; k < D; ++k)
+			for (int k = 0; k < D/2; ++k)
 			{
 				if(i < N)
 				{
@@ -244,14 +244,14 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 				double lambda1_cell = this->compute_lambda1(UL_cell, UR_cell);
 				double lambda2_cell = this->compute_lambda2(UL_cell, UR_cell);
 				double lambda3_cell = this->compute_lambda3(UL_cell, UR_cell);
-				for (int k = 0; k < D; ++k)
+				for (int k = 0; k < D/2; ++k)
 					R[k][i-1] += lambda1_cell*(UL_cell[k] - UL_star_cell[k]) + lambda2_cell*(UL_star_cell[k]-UR_star_cell[k]) + lambda3_cell*(UR_star_cell[k]-UR_cell[k]);
 			}
 			UL_cell = UR;
 		}
 		else
 		{
-			for (int k = 0; k < D; ++k)
+			for (int k = 0; k < D/2; ++k)
 			{
 				if(i < N)
 				{
@@ -271,11 +271,67 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 				double lambda1_cell = this->compute_lambda1(UL_cell, UR_cell);
 				double lambda2_cell = this->compute_lambda2(UL_cell, UR_cell);
 				double lambda3_cell = this->compute_lambda3(UL_cell, UR_cell);
-				for (int k = 0; k < D; ++k)
+				for (int k = 0; k < D/2; ++k)
 					R[k][i-1] += lambda1_cell*(UL_cell[k] - UL_star_cell[k]) + lambda2_cell*(UL_star_cell[k]-UR_star_cell[k]) + lambda3_cell*(UR_star_cell[k]-UR_cell[k]);
 			}
 			UL_cell = UR;
 		}
+        
+        if(CD_sens)
+        {
+            for (int k = D/2; k < D; ++k)
+            {
+                if(i < N)
+                {
+                    R[k][i] += max(lambda[0], 0.0)*UL[k]*(fabs(sigma[i])<1e-10) + (max(lambda[1], sigma[i])-max(lambda[0], sigma[i]))*UL_star[k] + (max(lambda[2],sigma[i])-max(lambda[1], sigma[i]))*UR_star[k] - max(lambda[2],sigma[i])*UR[k];
+                }
+                
+                if(i > 0)
+                {
+                    R[k][i-1] += min(lambda[0], sigma[i])*UL[k] + (min(lambda[1], sigma[i]) - min(lambda[0], sigma[i]))*UL_star[k] + (min(lambda[2],sigma[i])-min(lambda[1], sigma[i]))*UR_star[k] - min(lambda[2], 0.0)*UR[k]*(fabs(sigma[i])<1e-10);
+                }
+            }
+            if(i > 0)
+            {
+                UR_cell = UL;
+                vector<double> lambda_cell, U_SL_cell, U_SR_cell;
+                this->compute_U_star(UL_cell, UR_cell, UL_star_cell, UR_star_cell, lambda_cell, U_SL_cell, U_SR_cell);
+                double lambda1_cell = this->compute_lambda1(UL_cell, UR_cell);
+                double lambda2_cell = this->compute_lambda2(UL_cell, UR_cell);
+                double lambda3_cell = this->compute_lambda3(UL_cell, UR_cell);
+                for (int k = D/2; k < D; ++k)
+                    R[k][i-1] += lambda1_cell*(UL_cell[k] - UL_star_cell[k]) + lambda2_cell*(UL_star_cell[k]-UR_star_cell[k]) + lambda3_cell*(UR_star_cell[k]-UR_cell[k]);
+            }
+            UL_cell = UR;
+        }
+        else
+        {
+            for (int k = D/2; k < D; ++k)
+            {
+                if(i < N)
+                {
+                    R[k][i] += max(lambda[0], 0.0)*(UL[k] - UL_star[k]) + max(lambda[1], 0.0)*(UL_star[k]-UR_star[k]) + max(lambda[2],0.0)*(UR_star[k]-UR[k]);
+                }
+                
+                if(i > 0)
+                {
+                    R[k][i-1] -= min(lambda[0], 0.0)*(UL_star[k] - UL[k]) + min(lambda[1], 0.0)*(UR_star[k] - UL_star[k]) + min(lambda[2],0.0)*(UR[k] - UR_star[k]);
+                }
+            }
+            if(i > 0)
+            {
+                UR_cell = UL;
+                vector<double> lambda_cell(3), U_SL_cell, U_SR_cell;
+                this->compute_U_star(UL_cell, UR_cell, UL_star_cell, UR_star_cell, lambda_cell, U_SL_cell, U_SR_cell);
+                double lambda1_cell = this->compute_lambda1(UL_cell, UR_cell);
+                double lambda2_cell = this->compute_lambda2(UL_cell, UR_cell);
+                double lambda3_cell = this->compute_lambda3(UL_cell, UR_cell);
+                for (int k = D/2; k < D; ++k)
+                    R[k][i-1] += lambda1_cell*(UL_cell[k] - UL_star_cell[k]) + lambda2_cell*(UL_star_cell[k]-UR_star_cell[k]) + lambda3_cell*(UR_star_cell[k]-UR_cell[k]);
+            }
+            UL_cell = UR;
+        }
+        
 		if(i < N)
 		{
 			// adding (dx(h))(P-F)
