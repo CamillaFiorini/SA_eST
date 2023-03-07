@@ -4,6 +4,7 @@
 \usepackage{amsmath,graphicx} %maths
 \usepackage[utf8]{inputenc} %useful to type directly diacritic characters
 \usepackage{showkeys} %maths
+\usepackage{stmaryrd}
 \addtolength{\hoffset}{-1.5cm}
 \addtolength{\textwidth}{3.cm}
 \addtolength{\voffset}{-1.cm}
@@ -22,21 +23,73 @@
 \section{General strategy}
 
 We consider the solution of a hyperbolic system of conservation laws: 
- \begin{equation}\label{eq:1}
+
+\begin{equation}\label{eq:1}
 \partial_tU+ \partial_x F(U) =0
-   \end{equation}
+\end{equation}
+
 by a classical FV approach with a first order explicit update written as
- \begin{equation}\label{eq:2}
-\Delta x\dfrac{\bar U^{n+1}_i-\bar U^{n}_i}{\Delta t}+ \hat F_{i+1/2}  -  \hat F_{ii1/2} =0
-   \end{equation}
-   where   $\bar U_i^n$ denotes  the discrete approximation of the average of $U$ over cell $i:=[x_{i-1/2},\,x_{i+1/2}]$ at time $t^n$,
-   and where $\Delta x =x_{i+1/2}-x_{i-1/2}$, and $\Delta t=t^{n+1}-t^n$.
+\begin{equation}\label{eq:2}
+\Delta x\dfrac{\bar U^{n+1}_i-\bar U^{n}_i}{\Delta t}+ \hat F_{i+1/2}  -  \hat F_{i-1/2} =0
+\end{equation}
+where   $\bar U_i^n$ denotes  the discrete approximation of the average of $U$ over cell $i:=[x_{i-1/2},\,x_{i+1/2}]$ at time $t^n$,
+and where $\Delta x =x_{i+1/2}-x_{i-1/2}$, and $\Delta t=t^{n+1}-t^n$.
 As usual $\hat F_{i+1/2} $ denotes a numerical flux function of the left and right states $(U_{i+1/2}^-,\;U_{i+1/2}^+)$.
 
-For later use we also recast  \eqref{eq:2} 
+For later use we also recast  \eqref{eq:2} as
+\begin{equation}\label{eq:3}
+\bar U^{n+1}_i = \bar U^{n}_i - \dfrac{\Delta t}{\Delta x}\left(\hat F_{i+1/2}  -  \hat F_{i-1/2}\right).
+\end{equation}
  
+Herein, the $p$-system is considered for the analysis.
+The hyperbolic PDE system reads:
+\begin{equation} 
+\begin{cases}
+\partial_t \tau - \partial_x u = 0,\\
+\partial_t u - \partial_x p(\tau) = 0,
+\end{cases} 
+\end{equation}
+where $\tau>0$ is the co-volume (i.e.\ $\tau=1/\rho$, and $\rho$ is the density of the fluid), $u$ is the 
+Lagrangian velocity and the pressure $p(\tau)$ is a function only of $\tau$. 
+We assume $p'(\tau)<0$ and $p''(\tau)>0$.
+The Jacobian matrix of the system is
+\begin{equation}
+\mathcal{A}(\tau,u) = \begin{bmatrix} 0 & -1 \\ p'(\tau) & 0 \end{bmatrix}, 
+\end{equation}
+and its eigenvalues are real and distinct $\lambda_{\pm}$, where $c=\pm\sqrt{-p'(\tau)}$ is the Lagrangian sound speed. 
+Therefore $\mathcal{A}$ is diagonalisable, and the system is strictly hyperbolic. 
+In this work we will consider $p(\tau) = \tau^{-\gamma}$, where $\gamma = 1.4$ is the heat capacity ratio.
+
+As usual, the Ranking-Hugoniot equations read $\llbracket F(U) \rrbracket = \sigma \llbracket U \rrbracket$
+and the Riemann invariants can be computed as 
+$$ \mathcal{R}_\pm = u \pm \int c(\tau) \text{d}\tau = u \pm \int \sqrt{-p'(\tau)}\text{d}\tau $$
 
 \section{Tracking method}
+
+We introduce the extrapolated discontinuity tracking algorithm introduce in \cite{} 
+to solve the $p$-system.  
+
+We consider the solution $\{\bar U^n_i\}$ to be known at time $t^n$, along with the position of the 
+discontinuity $x_s$. We consider all cell-averages to have a one-value state, and the discontinuous point $x_s$
+to have a double-value position, $x_s^u$ and $x_s^d$, and a double-value state, $U_u$ and $U_d$.  
+
+\begin{enumerate}
+\item Definition of the cell $i^s$ where the shock falls such that $x_{i^s-1/2}<x_s<x_{i^s+1/2}$ 
+\item Evolve the solution from time $t^n$ to $t^{n+1}$ using Equation \eqref{eq:3} for all cell-averages, except for $\bar U_{i^s}$ 
+\item Extrapolation of shock-upstream, defined by the state $(U^{n+1}_u, x_s^u)$ and shock-downstrem states, defined by $(U^{n+1}_d, x_s^d)$ 
+is performed using first-order one-sided formulas to avoid crossing of discontinuities:
+$$  U^{n+1}_u = \bar U^{n+1}_{i^s+1} + o(\Delta x) \quad , \quad U^{n+1}_d = \bar U^{n+1}_{i^s-1} + o(\Delta x) $$ 
+\item The shock-upstream state $U^{n+1}_u$, is now used as input to solve the non-linear system of equations arising from the 
+Rankine-Hugoniot equations, and the acoustic information travelling into shock. For the $p$-system, this reduces to writing  
+the following three equations:
+\begin{align*}
+u_d - u_u &= \sigma (\tau_d - \tau_u) \\
+p_d(\tau) - p_u(\tau) &= \sigma (u_d - u_u) \\
+\mathcal{R}_d &= u_d - \frac{2\sqrt{\gamma}}{\gamma-1}(\tau^{-\frac{\gamma-1}{2}})_d 
+\end{align*}
+\item
+\end{enumerate}
+
 \section{In-cell recontruction}
  
 \section{Sensitivity equation: generalities}
