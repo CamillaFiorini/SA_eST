@@ -118,7 +118,7 @@ void roe_II::compute_residual(vector<vector<double> >& R) const
 			lambda = this->compute_lambda(UL, UR);
 			this->compute_U_star(UL, UR, Ustar);
 
-			if (CD)
+			if (CD_state && CD_sens)
 			{
 				for (int k=0; k<4; ++k)
 				{

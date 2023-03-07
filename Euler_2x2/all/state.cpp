@@ -8,7 +8,8 @@ state::state(vector<double> tau, vector<double> u, vector<double> s_tau, vector<
 	U[2] = s_tau;
 	U[3] = s_u;
 	gamma = g;
-	CD = c;
+    CD_state = c;
+    CD_sens = c;
 };
 
 void state::set_U(vector<double> tau, vector<double> u, vector<double> s_tau, vector<double> s_u)

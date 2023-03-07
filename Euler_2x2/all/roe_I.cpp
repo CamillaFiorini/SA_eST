@@ -51,7 +51,7 @@ void roe_I::compute_residual(vector<vector<double> >& R) const
 			double lambda = this->compute_lambda(UL, UR);
 			
 			this->compute_U_star(UL, UR, Ustar);
-			if (CD)
+			if (CD_state && CD_sens)
 			{
 				for (int k=0; k<4; ++k)
 				{
@@ -69,19 +69,83 @@ void roe_I::compute_residual(vector<vector<double> >& R) const
 			}
 			else
 			{
-				for (int k=0; k<4; ++k)
-				{
-					if (i < N)
-						R[k][i] += lambda*(Ustar[k]-UR[k]);
-					
-					if (i > 0)
-					{
-						if(ip == 0)
-							to_add[k] += lambda*(Ustar[k]-UL[k]);
-						else
-							R[k][i-1] += lambda*(Ustar[k]-UL[k]);
-					}
-				}
+                if(!CD_sens && !CD_state)
+                {
+                    
+                    for (int k=0; k<4; ++k)
+                    {
+                        if (i < N)
+                            R[k][i] += lambda*(Ustar[k]-UR[k]);
+                        
+                        if (i > 0)
+                        {
+                            if(ip == 0)
+                                to_add[k] += lambda*(Ustar[k]-UL[k]);
+                            else
+                                R[k][i-1] += lambda*(Ustar[k]-UL[k]);
+                        }
+                    }
+                }
+                if(CD_state && !CD_sens)
+                {
+                    for (int k=0; k<2; ++k)
+                    {
+                        if (i < N)
+                            R[k][i] += lambda*(Ustar[k]-UR[k]) - sigma[i]*Ustar[k];
+                        
+                        if (i > 0)
+                        {
+                            if(ip == 0)
+                                to_add[k] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+                            else
+                                R[k][i-1] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+                        }
+                    }
+                    for (int k=2; k<4; ++k)
+                    {
+                        if (i < N)
+                            R[k][i] += lambda*(Ustar[k]-UR[k]);
+                        
+                        if (i > 0)
+                        {
+                            if(ip == 0)
+                                to_add[k] += lambda*(Ustar[k]-UL[k]);
+                            else
+                                R[k][i-1] += lambda*(Ustar[k]-UL[k]);
+                        }
+                    }
+                }
+                if(!CD_state && CD_sens)
+                {
+                    for (int k=0; k<2; ++k)
+                    {
+                        if (i < N)
+                            R[k][i] += lambda*(Ustar[k]-UR[k]);
+                        
+                        if (i > 0)
+                        {
+                            if(ip == 0)
+                                to_add[k] += lambda*(Ustar[k]-UL[k]);
+                            else
+                                R[k][i-1] += lambda*(Ustar[k]-UL[k]);
+                        }
+                    }
+                    for (int k=2; k<4; ++k)
+                    {
+                        if (i < N)
+                            R[k][i] += lambda*(Ustar[k]-UR[k]) - sigma[i]*Ustar[k];
+                        
+                        if (i > 0)
+                        {
+                            if(ip == 0)
+                                to_add[k] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+                            else
+                                R[k][i-1] += lambda*(Ustar[k]-UL[k]) + sigma[i]*Ustar[k];
+                        }
+                    }
+                    
+                }
+                
 			}
 		}
 		if (tid != 0)

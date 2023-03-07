@@ -1,13 +1,5 @@
-//
-//  utilities.cpp
-//  
-//
-//  Created by Cami Fiorini on 29/11/16.
-//
-//
-
 #include "utilities.hpp"
-
+#include<iostream>
 
 void cmax(const int & n, int & maxa)
 {
@@ -37,12 +29,14 @@ void cbin(const int & n, int bin[])
 
 void can(const int & n, double & an)
 {
- int bin[31];
-	
- an = 0.;
- for (int i = 0; i < 31; i++) bin[i] = 0;
-	
- cbin(n,bin);
-	
- for (int k = 0; k < 31; k++) { an = an + bin[k]*(pow(2.,0 - k - 1)); }
+    /*int bin[31];
+       
+    an = 0.;
+    for (int i = 0; i < 31; i++) bin[i] = 0;
+       
+    cbin(n,bin);
+       
+    for (int k = 0; k < 31; k++) { an = an + bin[k]*(pow(2.,0 - k - 1)); }
+    */
+    an = (double)rand()/(double)RAND_MAX;
 }

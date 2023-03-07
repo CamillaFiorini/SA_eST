@@ -15,12 +15,13 @@ class state
 protected:
 	double gamma;
 	vector<vector<double> > U;
-	bool CD;
+    bool CD_state;
+    bool CD_sens;
 	vector<double> sigma;
 public:
 	// Constructors
-	state() : gamma(1.4), U(), CD(false), sigma() {};
-	state(vector<vector<double> > u, double g) : gamma(g), U(u), CD(false) {};
+	state() : gamma(1.4), U(), CD_state(false), CD_sens(false), sigma() {};
+	state(vector<vector<double> > u, double g) : gamma(g), U(u), CD_state(false), CD_sens(false) {};
 	state(vector<double>, vector<double>, vector<double>, vector<double>, double, bool=false);
 	virtual ~state() = default;
 	
@@ -33,9 +34,11 @@ public:
 	void get_U(vector<double>& u, int i) const;
 	inline void set_gamma(const double g) {gamma = g; return;};
 	inline double get_gamma() const {return gamma;};
-	inline void set_CD(const bool c) {CD=c;};
-	inline bool get_CD() const {return CD;};
-	inline void set_sigma(const vector<double>& s) {sigma = s; if(!CD) cerr << "Error: CD set to false" << endl;};
+    inline void set_CD_state(const bool c) {CD_state = c;};
+    inline bool get_CD_state() const {return CD_state;};
+    inline void set_CD_sens(const bool c) {CD_sens=c;};
+    inline bool get_CD_sens() const {return CD_sens;};
+	inline void set_sigma(const vector<double>& s) {sigma = s; if(!(CD_sens || CD_state)) cerr << "Error: CD set to false" << endl;};
 	inline void get_sigma(vector<double>& s) {s = sigma;};
 	void print_physical(const string&, ios_base::openmode mode = ios_base::out, int = 15);
 	// Methods

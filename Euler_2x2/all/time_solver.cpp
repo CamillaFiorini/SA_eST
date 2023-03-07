@@ -7,7 +7,8 @@ double time_solver::solve (state& st, bool only_state)
 	int cont(0);
 	double t(start_time), dt, dx(this->m.get_Dx());
 	vector<double> lambda;
-	bool CD = st.get_CD();
+    bool CD_state = st.get_CD_state();
+    bool CD_sens = st.get_CD_sens();
 	int N(st.get_size()), D(st.get_dimension());
 	if (only_state) D = 2;
 	vector<vector<double> > U, Uold, U_int, R;
@@ -26,9 +27,9 @@ double time_solver::solve (state& st, bool only_state)
 	while (t < end_time)
 	{
 		++cont;
-		if(cont%100==0)
+		if(cont%1==0)
 		{
-		//	cout << "t = " << t << endl;
+            st.print_physical(path, ios::out | ios::app);
 		}
 		/*** dt computation ***/
 		st.compute_lambda(lambda);
@@ -41,7 +42,7 @@ double time_solver::solve (state& st, bool only_state)
 		/**********************/
 		if (order == 2)
 		{
-			if (CD)
+			if (CD_state && CD_sens)
 			{
 				/** staggered grid definition **/
 				sigma.assign(N+1,0);
@@ -98,22 +99,21 @@ double time_solver::solve (state& st, bool only_state)
 
 				/*********** sampling ***********/
 				double an;
-				can(cont, an);
-				
+                can(cont, an);
+
 				for (int i=0; i<N; ++i)
 				{
-					for (int k=0; k<4; ++k)
-					{
-						if (an < dt/dx*max(0.0, sigma[i]))
-							U[k][i] = U_bar[k][i-1];
-						
-						if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
-							U[k][i] = U_bar[k][i];
-						
-						if (an > 1+dt/dx*min(0.0, sigma[i+1]))
-							U[k][i] = U_bar[k][i+1];
-						
-					}
+                    for (int k=0; k<4; ++k)
+                    {
+                        if (an < dt/dx*max(0.0, sigma[i]))
+                            U[k][i] = U_bar[k][i-1];
+                        
+                        if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
+                            U[k][i] = U_bar[k][i];
+                        
+                        if (an > 1+dt/dx*min(0.0, sigma[i+1]))
+                            U[k][i] = U_bar[k][i+1];
+                    }
 				}
 				/********************************/
 			}
@@ -136,7 +136,7 @@ double time_solver::solve (state& st, bool only_state)
 		}
 		if(order == 1)
 		{
-			if(CD)
+			if(CD_state && CD_sens)
 			{
 				/** staggered grid definition **/
 				sigma.assign(N+1,0);
@@ -166,32 +166,148 @@ double time_solver::solve (state& st, bool only_state)
 				/********************************/
 				
 				/*********** sampling ***********/
-				double an;
-				can(cont, an);
-				
+                double an;
+                double an2;
+                can(cont, an);
+                can(cont, an2);
+                an2 = an;
 				for (int i=0; i<N; ++i)
 				{
-					for (int k=0; k<4; ++k)
-					{
-						if (an < dt/dx*max(0.0, sigma[i]))
-							U[k][i] = U_bar[k][i-1];
-						
-						if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
-							U[k][i] = U_bar[k][i];
-						
-						if (an > 1+dt/dx*min(0.0, sigma[i+1]))
-							U[k][i] = U_bar[k][i+1];
-						
-					}
+                    for (int k=0; k<2; ++k)
+                    {
+                        if (an < dt/dx*max(0.0, sigma[i]))
+                            U[k][i] = U_bar[k][i-1];
+                        
+                        if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
+                            U[k][i] = U_bar[k][i];
+                        
+                        if (an > 1+dt/dx*min(0.0, sigma[i+1]))
+                            U[k][i] = U_bar[k][i+1];
+                    }
+                    
+                    for (int k=2; k<4; ++k)
+                    {
+                        if (an2 < dt/dx*max(0.0, sigma[i]))
+                            U[k][i] = U_bar[k][i-1];
+                        
+                        if (an2 > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
+                            U[k][i] = U_bar[k][i];
+                        
+                        if (an2 > 1+dt/dx*min(0.0, sigma[i+1]))
+                            U[k][i] = U_bar[k][i+1];
+                    }
 				}
 				/********************************/
 			}
 			else
 			{
-				st.compute_residual(R);
-				for (int i=0; i<N; ++i)
-					for (int k=0; k<4; ++k)
-						U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+                if(!CD_state && !CD_sens)
+                {
+                    st.compute_residual(R);
+                    for (int i=0; i<N; ++i)
+                        for (int k=0; k<4; ++k)
+                            U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+                }
+                if(CD_state && !CD_sens)
+                {
+                    sigma.assign(N+1,0);
+                    for (int i = 1; i < N; ++i)
+                    {
+                        if(U[1][i] - U[1][i-1] < -1e-3) // shock
+                        {
+                            if(U[0][i] - U[0][i-1] < -1e-3) //1-shock
+                                sigma[i] = -lambda[i];
+                            
+                            if(U[0][i] - U[0][i-1] > 1e-3) //2-shock
+                                sigma[i] = lambda[i];
+                            
+                        }
+                        x_bar[i] = dx*i + sigma[i]*dt;
+                    }
+                    /********************************/
+                    st.set_sigma(sigma);
+                    st.compute_residual(R);
+                    /********* compute U_bar ********/
+                    for (int i=0; i<N; ++i)
+                    {
+                        double dxi = (x_bar[i+1]-x_bar[i]);
+                        for (int k = 0; k < 2; ++k)
+                            U_bar[k][i] = dx/dxi*Uold[k][i] + dt/dxi*R[k][i];
+                    }
+                    /********************************/
+                    
+                    /*********** sampling ***********/
+                    double an;
+                    can(cont, an);
+
+                    for (int i=0; i<N; ++i)
+                    {
+                        for (int k=0; k<2; ++k)
+                        {
+                            if (an < dt/dx*max(0.0, sigma[i]))
+                                U[k][i] = U_bar[k][i-1];
+                            
+                            if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
+                                U[k][i] = U_bar[k][i];
+                            
+                            if (an > 1+dt/dx*min(0.0, sigma[i+1]))
+                                U[k][i] = U_bar[k][i+1];
+                            
+                        }
+                        for (int k=2; k<4; ++k)
+                            U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+                    }
+                }
+                if(!CD_state && CD_sens)
+                {
+                    sigma.assign(N+1,0);
+                    for (int i = 1; i < N; ++i)
+                    {
+                        if(U[1][i] - U[1][i-1] < -1e-3) // shock
+                        {
+                            if(U[0][i] - U[0][i-1] < -1e-3) //1-shock
+                                sigma[i] = -lambda[i];
+                            
+                            if(U[0][i] - U[0][i-1] > 1e-3) //2-shock
+                                sigma[i] = lambda[i];
+                            
+                        }
+                        x_bar[i] = dx*i + sigma[i]*dt;
+                    }
+                    /********************************/
+                    st.set_sigma(sigma);
+                    st.compute_residual(R);
+                    for (int i=0; i<N; ++i)
+                        for (int k=0; k<2; ++k)
+                            U[k][i] = Uold[k][i] + dt/dx*R[k][i];
+                    /********* compute U_bar ********/
+                    for (int i=0; i<N; ++i)
+                    {
+                        double dxi = (x_bar[i+1]-x_bar[i]);
+                        for (int k = 2; k < 4; ++k)
+                            U_bar[k][i] = dx/dxi*Uold[k][i] + dt/dxi*R[k][i];
+                    }
+                    /********************************/
+                    
+                    /*********** sampling ***********/
+                    double an;
+                    can(cont, an);
+                    
+                    for (int i=0; i<N; ++i)
+                    {
+                        for (int k=2; k<4; ++k)
+                        {
+                            if (an < dt/dx*max(0.0, sigma[i]))
+                                U[k][i] = U_bar[k][i-1];
+                            
+                            if (an > dt/dx*max(0.0, sigma[i]) && an < 1+dt/dx*min(0.0, sigma[i+1]))
+                                U[k][i] = U_bar[k][i];
+                            
+                            if (an > 1+dt/dx*min(0.0, sigma[i+1]))
+                                U[k][i] = U_bar[k][i+1];
+                        }
+                    }
+                }
 			}
 		}
 		
