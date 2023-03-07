@@ -56,7 +56,7 @@ The Jacobian matrix of the system is
 \begin{equation}
 \mathcal{A}(\tau,u) = \begin{bmatrix} 0 & -1 \\ p'(\tau) & 0 \end{bmatrix}, 
 \end{equation}
-and its eigenvalues are real and distinct $\lambda_{\pm}$, where $c=\pm\sqrt{-p'(\tau)}$ is the Lagrangian sound speed. 
+and its eigenvalues are real and distinct $\lambda_{\pm}=\pm c$, where $c=\pm\sqrt{-p'(\tau)}$ is the Lagrangian sound speed. 
 Therefore $\mathcal{A}$ is diagonalisable, and the system is strictly hyperbolic. 
 In this work we will consider $p(\tau) = \tau^{-\gamma}$, where $\gamma = 1.4$ is the heat capacity ratio.
 
@@ -74,20 +74,25 @@ discontinuity $x_s$. We consider all cell-averages to have a one-value state, an
 to have a double-value position, $x_s^u$ and $x_s^d$, and a double-value state, $U_u$ and $U_d$.  
 
 \begin{enumerate}
-\item Definition of the cell $i^s$ where the shock falls such that $x_{i^s-1/2}<x_s<x_{i^s+1/2}$ 
-\item Evolve the solution from time $t^n$ to $t^{n+1}$ using Equation \eqref{eq:3} for all cell-averages, except for $\bar U_{i^s}$ 
-\item Extrapolation of shock-upstream, defined by the state $(U^{n+1}_u, x_s^u)$ and shock-downstrem states, defined by $(U^{n+1}_d, x_s^d)$ 
+\item Definition of the cell $i^s$ where the shock falls, so that $x_{i^s-1/2}<x_s<x_{i^s+1/2}$, and surrogate cells $i^s-1$ and $i^s+1$.
+\item Extrapolation of shock-upstream, defined by the state $(U^n_u, x_s^u)$ and shock-downstrem states, defined by $(U^n_d, x_s^d)$ 
 is performed using first-order one-sided formulas to avoid crossing of discontinuities:
-$$  U^{n+1}_u = \bar U^{n+1}_{i^s+1} + o(\Delta x) \quad , \quad U^{n+1}_d = \bar U^{n+1}_{i^s-1} + o(\Delta x) $$ 
+$$  U^n_u = \bar U^n_{i^s+1} + o(\Delta x) \quad , \quad U^n_d = \bar U^n_{i^s-1} + o(\Delta x) $$ 
 \item The shock-upstream state $U^{n+1}_u$, is now used as input to solve the non-linear system of equations arising from the 
 Rankine-Hugoniot equations, and the acoustic information travelling into shock. For the $p$-system, this reduces to writing  
 the following three equations:
 \begin{align*}
-u_d - u_u &= \sigma (\tau_d - \tau_u) \\
-p_d(\tau) - p_u(\tau) &= \sigma (u_d - u_u) \\
-\mathcal{R}_d &= u_d - \frac{2\sqrt{\gamma}}{\gamma-1}(\tau^{-\frac{\gamma-1}{2}})_d 
+u^n_d - u^n_u &= \sigma (\tau^n_d - \tau^n_u) \\
+p^n_d(\tau) - p^n_u(\tau) &= \sigma (u^n_d - u^n_u) \\
+\mathcal{R}^n_d &= u^n_d - \frac{2\sqrt{\gamma}}{\gamma-1}(\tau^{-\frac{\gamma-1}{2}})^n_d, 
 \end{align*}
-\item
+which is a system of three equations with three unknowns $(u_d,\tau_d,\sigma)$ starting from the known vector $(u_u,\tau_u,\mathcal{R}_d)$.
+\item Therefore, the state vector $\bar U_{i^s}$ has been replaced by $\tilde U_{i^s}:=(x_s - x_{i-1/2})U_d + (x_{i+1/2}-x_s)U_u$. This gives a mass loss of the order of
+$\epsilon:=\bar U_{i^s}-\tilde U_{i^s}\sim o(\Delta x)$
+\item Evolve the solution from time $t^n$ to $t^{n+1}$ using Equation \eqref{eq:3} for all cell-averages, except for $\bar U_{i^s}$.
+The update formulae for the surrogate cells now read 
+$$ \bar U^{n+1}_{i-1} = \bar U^{n}_{i-1} - \dfrac{\Delta t}{\Delta x}\left(\hat F_{i-1/2}(U^n_{i-1},U^n_d)  -  \hat F_{i-3/2}\right) $$
+$$ \bar U^{n+1}_{i+1} = \bar U^{n}_{i+1} - \dfrac{\Delta t}{\Delta x}\left(\hat F_{i+3/2}  -  \hat F_{i+1/2}(U^n_{i+1},U^n_u)\right) $$
 \end{enumerate}
 
 \section{In-cell recontruction}
