@@ -1,0 +1,6 @@
+\contentsline {section}{\numberline {1}General strategy}{1}% 
+\contentsline {section}{\numberline {2}Tracking method}{1}% 
+\contentsline {section}{\numberline {3}In-cell recontruction}{1}% 
+\contentsline {section}{\numberline {4}Sensitivity equation: generalities}{1}% 
+\contentsline {section}{\numberline {5}Numerical implementation}{1}% 
+\contentsline {section}{\numberline {6}Results}{1}% 

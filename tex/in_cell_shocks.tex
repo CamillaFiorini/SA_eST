@@ -1,0 +1,51 @@
+\documentclass[10pt]{article}
+\usepackage[usenames]{color} %used for font color
+\usepackage{amssymb} %maths
+\usepackage{amsmath,graphicx} %maths
+\usepackage[utf8]{inputenc} %useful to type directly diacritic characters
+\usepackage{showkeys} %maths
+\addtolength{\hoffset}{-1.5cm}
+\addtolength{\textwidth}{3.cm}
+\addtolength{\voffset}{-1.cm}
+\addtolength{\textheight}{2.0cm}
+
+
+\title{In-cell shock resolution: tracking vs sub-cell reconstruction. Application to sensitivity analysis}
+\author{MC-CF-MR}
+\begin{document}
+
+
+\maketitle
+\tableofcontents
+
+
+\section{General strategy}
+
+We consider the solution of a hyperbolic system of conservation laws: 
+ \begin{equation}\label{eq:1}
+\partial_tU+ \partial_x F(U) =0
+   \end{equation}
+by a classical FV approach with a first order explicit update written as
+ \begin{equation}\label{eq:2}
+\Delta x\dfrac{\bar U^{n+1}_i-\bar U^{n}_i}{\Delta t}+ \hat F_{i+1/2}  -  \hat F_{ii1/2} =0
+   \end{equation}
+   where   $\bar U_i^n$ denotes  the discrete approximation of the average of $U$ over cell $i:=[x_{i-1/2},\,x_{i+1/2}]$ at time $t^n$,
+   and where $\Delta x =x_{i+1/2}-x_{i-1/2}$, and $\Delta t=t^{n+1}-t^n$.
+As usual $\hat F_{i+1/2} $ denotes a numerical flux function of the left and right states $(U_{i+1/2}^-,\;U_{i+1/2}^+)$.
+
+For later use we also recast  \eqref{eq:2} 
+ 
+
+\section{Tracking method}
+\section{In-cell recontruction}
+ 
+\section{Sensitivity equation: generalities}
+
+\section{Numerical implementation}
+
+\section{Results}
+
+
+ 
+
+ \end{document}
