@@ -1,0 +1,283 @@
+\documentclass[10pt]{article}
+%\usepackage[dvips,draft]{graphicx,epsfig}
+\usepackage{graphicx,epsfig}
+\usepackage{amsmath,amsfonts,psfrag,amsthm,pstcol}
+%\usepackage{showkeys}
+\addtolength{\hoffset}{-2.cm}
+\addtolength{\textwidth}{4.cm}
+\addtolength{\voffset}{-1.5cm}
+\addtolength{\textheight}{3.0cm}
+%
+%
+%
+\newcommand\Figref[1]{figure~\ref{#1}} 
+\newcommand\secref[1]{\S\ref{#1}}
+\newcommand\Ltwo[1]{\| #1 \|_{L^{2}(\Omega)}}
+\newcommand{\R}{\mathbb{R}}
+\DeclareMathOperator{\dist}{dist}
+\DeclareMathOperator{\diver}{div}
+\DeclareMathOperator{\diag}{diag}
+\newcommand{\id}{\mathrm{Id}}
+\DeclareMathOperator{\sign}{sign}
+\newcommand{\flux}{\boldsymbol{\mathcal{F}}}
+\newcommand{\source}{\boldsymbol{\mathcal{S}}}
+\newcommand{\vu}{\mathbf{u}}
+\newcommand{\vw}{\mathbf{w}}
+\newcommand{\vv}{\mathbf{v}}
+\newcommand{\vl}{\mathbf{l}}
+\newcommand{\vr}{\mathbf{r}}
+\newcommand{\vphi}{\boldsymbol{\phi}}
+\newcommand{\vbeta}{\boldsymbol{\beta}}
+\newcommand{\vPhi}{\boldsymbol{\Phi}}
+\newcommand{\vvarphi}{\boldsymbol{\varphi}}
+\newcommand{\eG}{\mathcal{G}}
+\newcommand{\eH}{\mathcal{H}}
+
+\newcommand{\speed}{\vec u}
+\newcommand{\F}{\boldsymbol{\mathcal{F}}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\G}{\mathcal{G}}
+\newcommand{\VV}{{\bf V}}
+\newcommand{\CN}{\mathcal{CN}}
+\newcommand{\Dj}{\mathcal{D}_j}
+\newcommand{\Dk}{\mathcal{D}_k}
+\newcommand{\Tau}{\mathcal{T}}
+\newcommand{\U}{{\bf u}}
+\newcommand{\W}{{\bf w}}
+\newcommand{\ST}{\boldsymbol{\mathcal{S}}}
+\newcommand{\PP}{\boldsymbol{\Phi}}
+\newcommand{\BB}{\boldsymbol{\beta}}
+\newcommand{\V}{{\bf v}}
+\newcommand{\RD}{\mathcal{RD}}
+\newcommand{\MU}{\mathcal{MU}}
+\newcommand{\CRD}{\mathcal{CRD}}
+\newcommand{\QRD}{\mathcal{QRD}}
+\newcommand{\LP}{\mathcal{LP}}
+\newcommand{\Di}{\mathcal{D}_i}
+\newcommand{\dpar}[2]{\dfrac{\partial #1}{\partial #2}}
+
+%
+%
+%
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}[proposition]{Lemma}
+\newtheorem{property}[proposition]{Property}
+\newtheorem{corollary}[proposition]{Corollary}
+\newtheorem{remark}[proposition]{Remark}
+\newtheorem{theorem}[proposition]{Theorem}
+\newtheorem{definition}[proposition]{Definition}
+\newtheorem{hypothesis}[proposition]{Hypothesis}
+%
+%
+%
+\begin{document}
+%
+%
+%
+\title{Monotone solutions and linear waves}
+%
+%
+%
+\author{MR}
+%
+%
+%
+\date{}
+%
+%
+%
+\maketitle
+%
+%
+\abstract{Wave equation, and monotone solutions} 
+%
+%
+%
+%\tableofcontents
+%
+
+
+\section{Linear wave equations}
+
+A good example of linear wave equation is given by  the  linear(ized) shallow water equations 
+\begin{equation}\label{eq:1}
+\begin{split}
+\partial_t  \zeta &+ h_0 \partial_x u   =0\\
+\partial_t u &+ g \partial_x\zeta = 0
+\end{split}
+\end{equation}
+ with $\zeta$ the free surface level, $h_0$ the depth at still water, and $u$ the horizontal speed, and we define the square wave celerity $c_0^2=gh_0$ .
+ Note that combining the above two we easily obtain the classical wave equation :
+\begin{equation}\label{eq:1a}
+\begin{split}
+\partial_{tt} \zeta - c^2_0  \partial_{xx}\zeta    =0
+\end{split}
+\end{equation}
+
+ The linear system above can be recast in several interesting ways. One of these involves  two advection equations  the the characteristic variables. 
+ To obtain this formulation we note that \eqref{eq:1} can be written compactly as
+ 
+ \begin{equation}\label{eq:2}
+\partial_t  W +    A_0 \partial_x W   =0\,,\quad
+W=\left[\begin{array}{c} \zeta\\ u
+\end{array}\right]\,,\quad
+A_0=\left[\begin{array}{cc} 0 &  h_0\\
+g&0
+\end{array}\right]\,.
+\end{equation}
+
+ The matrix $A_0$ has the following simple eigen-structure:
+  \begin{equation}\label{eq:3}
+ A_0= R_0\Lambda_0 L_0 \,,\quad
+ R_0=\left[\begin{array}{cc}1 & 1\\
+-c_0/h_0&c_0/h_0
+\end{array}\right]\,\;\;
+\Lambda_0=\left[\begin{array}{cc} -c_0 &  0\\
+0&c_0
+\end{array}\right]\,,\;\;
+L_0=\dfrac{1}{2c_0}\left[\begin{array}{cc} c_0 &- h_0\\
+c_0&h_0
+\end{array}\right].
+\end{equation}
+Moreover one easily shows that
+  \begin{equation}\label{eq:30}
+  A_0^2 = c_0^2 I_2
+\end{equation}  
+ Additional matrices useful for the   discretization  are the absolute and sign matrices defined as 
+   \begin{equation}\label{eq:3a}
+   | A_0|= R_0|\Lambda_0| L_0 \,,\quad
+      \text{sign}(A_0) = R_0       \text{sign}(\Lambda_0) L_0
+\end{equation}
+where the absolute and sign value of the eigenvalue matrix  $\Lambda_0$ are
+   \begin{equation}\label{eq:3b}
+|\Lambda_0|  = c_0  I_2 \,,\quad
+      \text{sign}(\Lambda_0)  =
+      \left[\begin{array}{cc} -1 &  0\\
+ 0&1
+\end{array}\right]
+\end{equation} 
+Simple calculations show that
+ \begin{equation}\label{eq:3c}
+   |A_0|=|\Lambda_0| =  c_0  I_2\;,\quad
+    \text{sign}(A_0)=\dfrac{1}{c_0}A_0
+\end{equation}
+Finally we consider the  splitting   matrices
+    \begin{equation}\label{eq:3d}
+        A^{\pm}_0 = (A_0  \pm |A_0| )/2 
+    =   A_0/2   \pm c_0I_2/2\;,\quad
+    P^{\pm} = (I_2 \pm \text{sign}(A_0))/2 
+    = I_2/2  \pm A_0/2c_0
+\end{equation}
+ 
+ \section{Characteristic decomposition}
+ We can now introduce the characteristic variables
+\begin{equation}\label{eq:4}
+\mathcal{N}:=   L_0W := \left[\begin{array}{c}  \eta_1 \\  \eta_2
+\end{array}\right]= \dfrac{1}{2c_0}\left[\begin{array}{c}  c_0 \zeta - h_0 u\\  c_0 \zeta + h_0 u
+\end{array}\right]
+\end{equation} 
+Note that we can go back from characteristic to physical variables using the transformation
+\begin{equation}\label{eq:5}
+W=R_0\mathcal{N}=\left[\begin{array}{c}  \eta_2+\eta_1  \\ c_0(\eta_2-\eta_1)/h_0 
+\end{array}\right]
+\end{equation} 
+The characteristic   equations can be readily written by multiplying \eqref{eq:1} by $L_0$ and read
+\begin{equation}\label{eq:6}
+\begin{split}
+\partial_t  \eta_1 &- c_0 \partial_x  \eta_1   =0\\
+\partial_t  \eta_2 &+ c_0 \partial_x  \eta_2  =0
+\end{split}
+\end{equation}
+These are a set of decoupled advection equations for which we can readily write the exact solution:
+\begin{equation}\label{eq:6a}
+\begin{split}
+\eta_1(x,t)=\eta_1^0(x+c_0t)\\
+\eta_2(x,t)=\eta_2^0(x-c_0t)
+\end{split}
+\end{equation}
+having denoted by $\eta^0_{1/2}(x)$ the initial value of the characteristic variables.
+This  allows  to compute the exact solution in terms of physical quantities using \eqref{eq:5}:
+\begin{equation}\label{eq:7}
+\begin{split}
+h(x,t) = &\eta_1^0(x+c_0t)+\eta_2^0(x-c_0t)\\
+u(x,t) = &(\eta_2^0(x-c_0t)-\eta_1^0(x+c_0t))/h_0
+\end{split}
+\end{equation}
+
+ \section{Upwind scheme and monotonicity}
+ 
+ We study the upwind scheme reading
+ \begin{equation}\label{eq:8}
+\begin{split}
+\Delta xW_i^{n+1} =\Delta x W_i^n - \Delta t    A_0^+(W_i -W_{i-1} )^n
+- \Delta t    A_0^-(W_{i+1} -W_{i} )^n
+ \end{split}
+\end{equation}
+We pre-multiply the previous expression by $L_0$, and replace $L_0W_i$ by $\mathcal{N}_i$ which allows to write
+
+ \begin{equation}\label{eq:9}
+\begin{split}
+\Delta x\mathcal{N}_i^{n+1} =\Delta x \mathcal{N}_i^n - \Delta t    \Lambda_0^+(\mathcal{N}_i -\mathcal{N}_{i-1} )^n
+- \Delta t    \Lambda_0^-(\mathcal{N}_{i+1} -\mathcal{N}_{i} )^n
+ \end{split}
+\end{equation}
+
+The two components of the  update above are now   independent, in particular we can write
+ \begin{equation}\label{eq:10}
+\begin{split}
+\Delta x(\mathcal{N}_i^{n+1})_{\ell} =\Delta x (   1 - \Delta t /\Delta x (\Lambda_0^+)_{\ell} +\Delta t /\Delta x (\Lambda_0^-)_{\ell} )
+(\mathcal{N}_i^n)_{\ell} + \Delta t   ( \Lambda_0^+)_{\ell}(\mathcal{N}_{i-1}^n )_{\ell}
+- \Delta t    \Lambda_0^-(\mathcal{N}_{i+1}^n )_{\ell}
+ \end{split}
+\end{equation}
+which readily shows that  as long as $1 - \Delta t/\Delta x  (\Lambda_0^+)_{\ell} +\Delta t /\Delta x (\Lambda_0^-)_{\ell}  \ge 0$, then
+ \begin{equation}\label{eq:11}
+\textsf{m}_{\ell} \le (\mathcal{N}_i^n)_{\ell},\;(\mathcal{N}_{i-1}^n)_{\ell},\; (\mathcal{N}_{i+1}^n)_{\ell} \le M_{\ell}
+\quad\Rightarrow\quad
+\textsf{m}_{\ell} \le(\mathcal{N}_i^{n+1})_{\ell} \le M_{\ell}
+\end{equation}
+Now for compatibility with \eqref{eq:4} we set
+ \begin{equation}\label{eq:12}\begin{split}
+ M_1 :=  \dfrac{1}{2c_0}(c_0 H_{\max} - h_0 U_{\min})\;,\quad
+  M_2 := \dfrac{1}{2c_0}(c_0 H_{\max} + h_0 U_{\max}) \\
+  \textsf{m}_1:=  \dfrac{1}{2c_0}(c_0 H_{\min} - h_0 U_{\max})\;,\quad
+  \textsf{m}_2:=\dfrac{1}{2c_0}(c_0 H_{\min} + h_0 U_{\min})
+\end{split}\end{equation}
+
+Using the transformation back to physical variables this readily shows that  for this scheme we have\footnote{just use the fact that $\textsf{m}_1+\textsf{m}_2\le \zeta\le M_1+M_2$ and that $\textsf{m}_2-M_1\le h_0u/c_0 \le M_2-\textsf{m}_1$  }  
+ \begin{equation}\label{eq:12a}\begin{split}
+H_{\min}  \le \zeta_i^n,\; \zeta_{i-1}^n,\; \zeta_{i+1}^n \le H_{\max} 
+\;\;&\text{and}\;\;
+U_{\min} \le  u^n_i,\; u_{i-1}^n,\; u_{i+1}^n \le  U_{\max}\\
+\Rightarrow \quad
+H_{\min}  \le \zeta_i^{n+1}  \le H_{\max} 
+\;\;&\text{and}\;\;
+U_{\min} \le  u^{n+1}_i \le  U_{\max}
+\end{split}\end{equation}
+
+ \section{Variable coefficient case} 
+ In the variable coefficient case we  have (I will omit the  subscript $_0$ to lighten the notation)
+  \begin{equation}\label{eq:13}
+\begin{split}
+\Delta xW_i^{n+1} =\Delta x W_i^n - \Delta t    A_{i-1/2}^+(W_i -W_{i-1} )^n
+- \Delta t    A_{i+1/2}^-(W_{i+1} -W_{i} )^n
+ \end{split}
+\end{equation}
+We choose to write the above as (other options exist but let us stick to this for simplicity)
+  \begin{equation}\label{eq:14}
+\begin{split}
+W_i^{n+1}  = &\dfrac{\tilde{W}_i^{n+1} }{2} +\dfrac{\hat{W}_i^{n+1} }{2} \\
+\tilde{W}_i^{n+1}:= &   W_i^n - 2\dfrac{ \Delta t}{\Delta x}    A_{i-1/2}^+(W_i -W_{i-1} )^n \\
+\hat{W}_i^{n+1} := & W_i^n - 2\dfrac{ \Delta t}{\Delta x}  A_{i+1/2}^-(W_{i+1} -W_{i} )^n
+ \end{split}
+\end{equation}
+We now apply the previous analysis independently to the two partial updates above to show that as long as 
+$1 - 2\Delta t/\Delta x  (\Lambda_{i-1/2}^+)_{\ell} \ge 0$ and  $1 +2\Delta t /\Delta x (\Lambda_{i+1/2}^-)_{\ell}  \ge 0$
+then both $\tilde{W}_i^{n+1}$, and 
+$\hat{W}_i^{n+1}$ verify  \eqref{eq:12a}. From the convexity of $W_i^{n+1}$ we deduce that similar bounds are verified
+for the new values of the cell average.
+
+
+\end{document}
+
+
